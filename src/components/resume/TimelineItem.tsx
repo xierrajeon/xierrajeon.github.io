@@ -49,9 +49,21 @@ function LinkedProjects({ entry }: { entry: TimelineEntry }) {
           const external = internal ? null : safeExternalUrl(item.url);
           const href = internal ?? external;
 
+          const period = formatDateRange(
+            item.start_date,
+            item.end_date,
+            item.is_ongoing,
+            lang,
+          );
+
           const body = (
             <>
               <span className="shrink-0 text-xs font-semibold">{name}</span>
+              {period && (
+                <span className="shrink-0 text-2xs tabular-nums text-fg-subtle">
+                  {period}
+                </span>
+              )}
               {note && (
                 <span className="min-w-0 flex-1 truncate text-xs text-fg-muted">
                   {note}

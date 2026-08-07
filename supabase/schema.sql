@@ -142,7 +142,10 @@ alter table public.timeline_entries
 -- briefly and defer the long write-up elsewhere, so each one can point either at
 -- a project in the portfolio tab (by slug, resolved to /projects/<slug>) or at
 -- an external address. Shape mirrors `LinkedProject` in src/lib/types.ts:
---   [{ "name_ko": "GED", "name_en": "GED", "slug": "ged", "url": null }]
+--   [{ "name_ko": "GED", "name_en": "GED", "note_ko": "홈페이지 만들기",
+--      "note_en": "Website build", "start_date": "2025-03-01",
+--      "end_date": "2025-05-01", "is_ongoing": false,
+--      "slug": "ged", "url": null }]
 alter table public.timeline_entries
   add column if not exists linked_projects jsonb not null default '[]'::jsonb;
 

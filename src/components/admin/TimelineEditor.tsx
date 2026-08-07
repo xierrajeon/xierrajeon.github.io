@@ -174,6 +174,14 @@ function MajorsEditor({
   );
 }
 
+interface ProjectOption {
+  slug: string;
+  title: string;
+  start_date: string | null;
+  end_date: string | null;
+  is_ongoing: boolean;
+}
+
 /** Where a linked project points. Derived from the data, not stored. */
 type LinkMode = "portfolio" | "external" | "none";
 
@@ -202,8 +210,8 @@ function LinkedProjectsEditor({
   onChange,
 }: {
   items: LinkedProject[];
-  /** Published projects available to link to. */
-  options: { slug: string; title: string }[];
+  /** Published projects available to link to, with their own periods. */
+  options: ProjectOption[];
   onChange: (items: LinkedProject[]) => void;
 }) {
   function update(index: number, patch: Partial<LinkedProject>) {
@@ -222,6 +230,28 @@ function LinkedProjectsEditor({
     } else {
       update(index, { url: url || null });
     }
+  }
+
+  /**
+   * Picking a portfolio project fills in its period, but only when the row has
+   * none yet — the stretch spent on it at one company can legitimately differ
+   * from the project's own dates, so an existing value is never overwritten.
+   */
+  function setSlug(index: number, slug: string | null) {
+    const item = items[index];
+    const option = options.find((o) => o.slug === slug);
+    const blank = !item.start_date && !item.end_date && !item.is_ongoing;
+    update(index, {
+      slug,
+      url: null,
+      ...(option && blank
+        ? {
+            start_date: option.start_date,
+            end_date: option.end_date,
+            is_ongoing: option.is_ongoing,
+          }
+        : {}),
+    });
   }
 
   function setMode(index: number, mode: LinkMode) {
@@ -288,6 +318,40 @@ function LinkedProjectsEditor({
                   />
                 </div>
 
+                <div className="grid items-end gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <TextInput
+                    label="수행 시작"
+                    type="date"
+                    value={item.start_date ?? ""}
+                    onChange={(start_date) =>
+                      update(index, { start_date: start_date || null })
+                    }
+                  />
+                  <TextInput
+                    label="수행 종료"
+                    type="date"
+                    value={item.end_date ?? ""}
+                    onChange={(end_date) =>
+                      update(index, { end_date: end_date || null })
+                    }
+                    disabled={item.is_ongoing}
+                  />
+                  <div className="pb-2">
+                    <Toggle
+                      label="진행 중"
+                      checked={item.is_ongoing}
+                      onChange={(is_ongoing) =>
+                        update(index, {
+                          is_ongoing,
+                          // Keeping an end date alongside "in progress" would
+                          // render contradictory text.
+                          end_date: is_ongoing ? null : item.end_date,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
                 <div className="grid gap-2 sm:grid-cols-[11rem_1fr]">
                   <Select
                     label="이동 대상"
@@ -308,7 +372,7 @@ function LinkedProjectsEditor({
                             label: `${o.title} (/${o.slug})`,
                           })),
                         ]}
-                        onChange={(slug) => update(index, { slug: slug || null })}
+                        onChange={(slug) => setSlug(index, slug || null)}
                       />
                     ) : (
                       <p className="self-end text-2xs text-warn">
@@ -342,6 +406,9 @@ function LinkedProjectsEditor({
               name_en: "",
               note_ko: "",
               note_en: "",
+              start_date: null,
+              end_date: null,
+              is_ongoing: false,
               slug: null,
               url: null,
             },
@@ -440,7 +507,7 @@ function EntryCard({
   index: number;
   count: number;
   allTags: string[];
-  projectOptions: { slug: string; title: string }[];
+  projectOptions: ProjectOption[];
   onChange: (next: TimelineEntry) => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
@@ -678,9 +745,7 @@ function EntryCard({
 export function TimelineEditor() {
   const [category, setCategory] = useState<TimelineCategory>("career");
   const [rows, setRows] = useState<TimelineEntry[] | null>(null);
-  const [projectOptions, setProjectOptions] = useState<
-    { slug: string; title: string }[]
-  >([]);
+  const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [deleted, setDeleted] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
   const { status, error, run, reset } = useSaver();
@@ -698,7 +763,7 @@ export function TimelineEditor() {
         // Only published projects: linking to a draft would land on a 404.
         supabase
           .from("projects")
-          .select("slug,title_ko,title_en")
+          .select("slug,title_ko,title_en,period_start,period_end,is_ongoing")
           .eq("is_published", true)
           .order("sort_order", { ascending: true }),
       ]);
@@ -709,6 +774,9 @@ export function TimelineEditor() {
           slug: p.slug as string,
           title:
             (p.title_ko as string) || (p.title_en as string) || (p.slug as string),
+          start_date: (p.period_start as string | null) ?? null,
+          end_date: (p.period_end as string | null) ?? null,
+          is_ongoing: p.is_ongoing === true,
         })),
       );
     })();

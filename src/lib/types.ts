@@ -42,6 +42,14 @@ export interface LinkedProject {
   /** One line on what it was — "홈페이지 만들기 프로젝트". */
   note_ko: string;
   note_en: string;
+  /**
+   * When it was worked on. Stored as dates rather than free text so the range
+   * formats itself per language, and month precision is assumed — nobody dates
+   * a work project to the day on a resume.
+   */
+  start_date: string | null;
+  end_date: string | null;
+  is_ongoing: boolean;
   slug: string | null;
   url: string | null;
 }
