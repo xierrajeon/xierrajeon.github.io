@@ -1,189 +1,371 @@
 "use client";
 
-import { Globe, Mail, MapPin, NotebookPen, Phone, Printer, User } from "lucide-react";
+import { Download, Globe, Heart, Phone, Sparkles, User } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 import { useLang } from "@/components/providers/AppProviders";
-import {
-  GithubIcon,
-  LinkedinIcon,
-  type IconComponent,
-} from "@/components/ui/BrandIcons";
+import { GithubIcon, LinkedinIcon } from "@/components/ui/BrandIcons";
 import { Markdown } from "@/components/ui/Markdown";
 import { SmartImage } from "@/components/ui/SmartImage";
-import { tr } from "@/lib/i18n";
+import { tr, translate } from "@/lib/i18n";
 import { safeExternalUrl } from "@/lib/url";
+import { useLikes } from "@/lib/useLikes";
 import type { Profile } from "@/lib/types";
 
-/**
- * Social links stay icon-only — the addresses (github.com/xxx, linkedin.com/in/xxx)
- * would repeat information already conveyed by the logo and get long enough to
- * wrap awkwardly on mobile.
- */
-const SOCIAL_LINKS: {
-  key: keyof Profile;
+type IconComp = ComponentType<SVGProps<SVGSVGElement>>;
+
+interface ContactSlot {
+  key: string;
   label: string;
-  Icon: IconComponent;
-}[] = [
-  { key: "github_url", label: "GitHub", Icon: GithubIcon },
-  { key: "linkedin_url", label: "LinkedIn", Icon: LinkedinIcon },
-  { key: "blog_url", label: "Blog", Icon: NotebookPen },
-  { key: "website_url", label: "Website", Icon: Globe },
-];
+  value: string;
+  href: string;
+  Icon: IconComp;
+  external?: boolean;
+}
 
 export function ProfileCard({
   profile,
-  /** The resume tab offers a print action; the portfolio tab does not. */
+  /** The resume tab offers the PDF export; the portfolio tab does not. */
   showPrint = false,
 }: {
   profile: Profile;
   showPrint?: boolean;
 }) {
-  const { lang, t } = useLang();
+  const { lang } = useLang();
 
   const nameKo = profile.name_ko.trim();
   const nameEn = profile.name_en.trim();
   const status = tr(profile.status_ko, profile.status_en, lang);
   const tagline = tr(profile.tagline_ko, profile.tagline_en, lang);
   const bio = tr(profile.bio_ko, profile.bio_en, lang);
-  const location = tr(profile.location_ko, profile.location_en, lang);
 
-  // Korean resumes conventionally show both spellings; English mode does not
-  // need the Korean name repeated back.
   const displayName =
-    lang === "ko" && nameKo && nameEn ? `${nameKo} (${nameEn})` : tr(nameKo, nameEn, lang);
+    lang === "ko" && nameKo && nameEn ? nameKo : tr(nameKo, nameEn, lang);
+  const secondaryName =
+    lang === "ko" && nameKo && nameEn ? nameEn : "";
+
+  const email = profile.email?.trim() || null;
+  const phone = profile.phone?.trim() || null;
+  const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
+
+  const contactSlots = buildContactSlots(profile, lang);
+  const likes = useLikes(0);
 
   return (
-    <section className="card p-5 sm:p-7">
-      <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-start sm:gap-7 sm:text-left">
-        <div className="shrink-0">
-          {profile.photo_url ? (
-            <SmartImage
-              src={profile.photo_url}
-              alt={displayName}
-              width={144}
-              height={144}
-              priority
-              className="size-28 rounded-full object-cover ring-2 ring-border sm:size-36"
-            />
-          ) : (
-            <div
-              className="flex size-28 items-center justify-center rounded-full bg-accent-soft ring-2 ring-border sm:size-36"
-              aria-hidden="true"
-            >
-              <User className="size-10 text-accent sm:size-12" />
+    <section className="card p-5 sm:p-8">
+      <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-10">
+        {/* Left column — photo + status + primary actions */}
+        <div className="flex w-full flex-col items-center gap-5 lg:w-auto lg:shrink-0">
+          <PhotoFrame
+            src={profile.photo_url}
+            alt={displayName || "profile"}
+            onLike={likes.like}
+            liked={likes.hasLiked}
+            pending={likes.pending}
+            likeAria={translate(lang, "profile.likeAria")}
+          />
+
+          {status && (
+            <div className="flex flex-col items-center gap-1.5 text-center">
+              <span className="status-pill-lg">
+                {profile.status_active && (
+                  <span className="status-dot" aria-hidden="true" />
+                )}
+                {status}
+              </span>
             </div>
           )}
+
+          <div className="flex w-full flex-col gap-2 sm:w-64">
+            {email && (
+              <a href={`mailto:${email}`} className="btn btn-primary btn-lg">
+                <Phone className="size-4" aria-hidden="true" />
+                {translate(lang, "profile.contactMe")}
+              </a>
+            )}
+            {showPrint && (
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="btn btn-secondary btn-lg no-print"
+              >
+                <Download className="size-4" aria-hidden="true" />
+                {translate(lang, "profile.downloadResume")}
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          {status && (
-            <p className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
-              {profile.status_active && (
-                <span
-                  className="size-1.5 rounded-full bg-success"
-                  aria-hidden="true"
-                />
+        {/* Right column — name, bio, contact cards, likes */}
+        <div className="min-w-0 flex-1 text-center lg:text-left">
+          <div className="flex flex-col items-center gap-1.5 lg:items-start">
+            <h1 className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-3xl font-bold sm:text-4xl lg:justify-start">
+              <span>{displayName}</span>
+              {secondaryName && (
+                <span className="text-xl font-medium text-fg-subtle sm:text-2xl">
+                  ({secondaryName})
+                </span>
               )}
-              {status}
-            </p>
+            </h1>
+
+            {tagline && (
+              <p className="text-base font-semibold text-accent sm:text-lg">
+                {tagline}
+              </p>
+            )}
+          </div>
+
+          {bio && (
+            <Markdown className="rich-text mt-4 text-left">{bio}</Markdown>
           )}
 
-          <h1 className="text-2xl font-bold sm:text-3xl">{displayName}</h1>
-
-          {tagline && (
-            <p className="mt-1.5 text-sm font-semibold text-accent sm:text-base">
-              {tagline}
-            </p>
+          {(contactSlots.length > 0 || phone) && (
+            <>
+              <hr className="divider my-6" />
+              <ul
+                className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                aria-label={translate(lang, "resume.contact")}
+              >
+                {phone && telHref && (
+                  <ContactCard
+                    href={telHref}
+                    label={translate(lang, "profile.phone")}
+                    value={phone}
+                    Icon={Phone}
+                  />
+                )}
+                {contactSlots.map((slot) => (
+                  <ContactCard
+                    key={slot.key}
+                    href={slot.href}
+                    label={slot.label}
+                    value={slot.value}
+                    Icon={slot.Icon}
+                    external={slot.external}
+                  />
+                ))}
+              </ul>
+            </>
           )}
 
-          {bio && <Markdown className="rich-text mt-3">{bio}</Markdown>}
-
-          <ContactRows profile={profile} location={location} />
+          <div className="mt-5 flex justify-center lg:justify-start">
+            <p className="likes-count no-print" aria-live="polite">
+              <Heart className="size-4" aria-hidden="true" />
+              <strong>{likes.count.toLocaleString()}</strong>
+              <span>{translate(lang, "profile.likes")}</span>
+            </p>
+          </div>
         </div>
-
-        {showPrint && (
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="btn btn-secondary btn-sm no-print shrink-0 self-center sm:self-start"
-          >
-            <Printer className="size-4" aria-hidden="true" />
-            {t("resume.print")}
-          </button>
-        )}
       </div>
     </section>
   );
 }
 
-function ContactRows({
-  profile,
-  location,
+/* -------------------------------------------------------------------------- */
+
+function PhotoFrame({
+  src,
+  alt,
+  onLike,
+  liked,
+  pending,
+  likeAria,
 }: {
-  profile: Profile;
-  location: string;
+  src: string | null;
+  alt: string;
+  onLike: () => void;
+  liked: boolean;
+  pending: boolean;
+  likeAria: string;
 }) {
-  const email = profile.email?.trim() || null;
-  const phone = profile.phone?.trim() || null;
-  // Strip spaces/hyphens for the tel: URI while keeping the leading `+`.
-  const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
-
-  const socials = SOCIAL_LINKS.flatMap(({ key, label, Icon }) => {
-    const href = safeExternalUrl(profile[key] as string | null | undefined);
-    return href ? [{ key, label, Icon, href }] : [];
-  });
-
-  if (!location && !email && !phone && socials.length === 0) return null;
-
-  const hasContact = email || (phone && telHref);
-
   return (
-    <div className="mt-3 flex flex-col items-center gap-2 sm:items-start">
-      {hasContact && (
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-fg-subtle sm:justify-start">
-          {email && (
-            <a
-              href={`mailto:${email}`}
-              className="flex items-center gap-1 hover:text-accent"
-            >
-              <Mail className="size-3.5" aria-hidden="true" />
-              {email}
-            </a>
-          )}
-          {phone && telHref && (
-            <a
-              href={telHref}
-              className="flex items-center gap-1 hover:text-accent"
-            >
-              <Phone className="size-3.5" aria-hidden="true" />
-              {phone}
-            </a>
-          )}
+    <div className="profile-photo-frame">
+      {/* Ambient blurred blobs behind the photo. */}
+      <span className="profile-decor-blob" aria-hidden="true" />
+
+      {/* Dotted grid at the top-left, exactly like the reference. */}
+      <span className="profile-decor-dots" aria-hidden="true" />
+
+      {/* Orbital rings around the photo — two tilted ellipses. */}
+      <svg
+        className="profile-decor-ring"
+        viewBox="0 0 200 200"
+        aria-hidden="true"
+      >
+        <ellipse
+          cx="100"
+          cy="100"
+          rx="94"
+          ry="88"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.25"
+          transform="rotate(-18 100 100)"
+        />
+        <ellipse
+          cx="100"
+          cy="100"
+          rx="90"
+          ry="82"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.75"
+          strokeDasharray="2 4"
+          transform="rotate(24 100 100)"
+        />
+      </svg>
+
+      {/* Two small sparkles at fixed anchor points. */}
+      <Sparkles
+        className="profile-decor-sparkle"
+        style={{ top: "0.5rem", right: "0.25rem", width: "1.5rem", height: "1.5rem" }}
+        aria-hidden="true"
+      />
+      <Sparkles
+        className="profile-decor-sparkle"
+        style={{
+          bottom: "3.5rem",
+          left: "-0.25rem",
+          width: "1rem",
+          height: "1rem",
+          opacity: 0.7,
+        }}
+        aria-hidden="true"
+      />
+
+      {src ? (
+        <SmartImage
+          src={src}
+          alt={alt}
+          width={288}
+          height={288}
+          priority
+          className="profile-photo-image"
+        />
+      ) : (
+        <div
+          className="profile-photo-image flex items-center justify-center"
+          aria-hidden="true"
+        >
+          <User className="size-14 text-accent" />
         </div>
       )}
-      {location && (
-        <p className="flex items-center gap-1 text-xs text-fg-subtle">
-          <MapPin className="size-3.5" aria-hidden="true" />
-          {location}
-        </p>
-      )}
-      {socials.length > 0 && (
-        <ul className="mt-1 flex flex-wrap items-center gap-1">
-          {socials.map(({ key, label, Icon, href }) => (
-            <li key={key}>
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer me"
-                aria-label={label}
-                title={label}
-                className="btn btn-ghost btn-icon btn-sm"
-              >
-                <Icon className="size-4" aria-hidden="true" />
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+
+      <button
+        type="button"
+        onClick={onLike}
+        disabled={liked || pending}
+        aria-label={likeAria}
+        aria-pressed={liked}
+        className="heart-button no-print"
+        data-liked={liked ? "true" : "false"}
+      >
+        <Heart
+          className="size-5"
+          fill={liked ? "currentColor" : "none"}
+          aria-hidden="true"
+        />
+      </button>
     </div>
   );
+}
+
+function ContactCard({
+  href,
+  label,
+  value,
+  Icon,
+  external = false,
+}: {
+  href: string;
+  label: string;
+  value: string;
+  Icon: IconComp;
+  external?: boolean;
+}) {
+  return (
+    <li>
+      <a
+        href={href}
+        className="contact-card"
+        {...(external
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+      >
+        <span className="contact-card-icon" aria-hidden="true">
+          <Icon className="size-5" />
+        </span>
+        <span className="contact-card-label">{label}</span>
+        <span className="contact-card-value">{value}</span>
+      </a>
+    </li>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+function buildContactSlots(
+  profile: Profile,
+  lang: "ko" | "en",
+): ContactSlot[] {
+  const slots: ContactSlot[] = [];
+
+  const github = safeExternalUrl(profile.github_url);
+  if (github) {
+    slots.push({
+      key: "github",
+      label: "GitHub",
+      value: extractHandle(github, "github") ?? "GitHub",
+      href: github,
+      Icon: GithubIcon,
+      external: true,
+    });
+  }
+
+  const linkedin = safeExternalUrl(profile.linkedin_url);
+  if (linkedin) {
+    slots.push({
+      key: "linkedin",
+      label: "LinkedIn",
+      value: extractHandle(linkedin, "linkedin") ?? "LinkedIn",
+      href: linkedin,
+      Icon: LinkedinIcon,
+      external: true,
+    });
+  }
+
+  const website = safeExternalUrl(profile.website_url);
+  if (website) {
+    slots.push({
+      key: "website",
+      label: lang === "ko" ? "웹사이트" : "Website",
+      value: extractHandle(website, "website") ?? website,
+      href: website,
+      Icon: Globe,
+      external: true,
+    });
+  }
+
+  return slots;
+}
+
+function extractHandle(
+  url: string,
+  kind: "github" | "linkedin" | "website",
+): string | null {
+  try {
+    const parsed = new URL(url);
+    if (kind === "website") {
+      return parsed.host.replace(/^www\./, "");
+    }
+    if (kind === "linkedin") {
+      // /in/xxx or /company/xxx
+      const match = /^\/(?:in|company|pub)\/([^/]+)\/?/.exec(parsed.pathname);
+      if (match) return decodeURIComponent(match[1]);
+    }
+    // github and fallback: first path segment
+    const first = parsed.pathname.split("/").filter(Boolean)[0];
+    return first ? decodeURIComponent(first) : null;
+  } catch {
+    return null;
+  }
 }

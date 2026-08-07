@@ -368,3 +368,38 @@ create policy "media updatable by admins" on storage.objects for update
 drop policy if exists "media deletable by admins" on storage.objects;
 create policy "media deletable by admins" on storage.objects for delete
   using (bucket_id = 'media' and public.is_admin());
+
+-- ============================================================================
+-- site_likes — visitor heart button on the profile card
+--
+-- A single-row counter. Anonymous visitors can read the count, but writes are
+-- gated behind a SECURITY DEFINER function so the anon key cannot spam
+-- arbitrary values into the column. Client-side localStorage prevents casual
+-- double-clicks; determined users can bypass it, which is fine — this is a
+-- vanity counter, not a vote.
+-- ============================================================================
+create table if not exists public.site_likes (
+  id    smallint primary key default 1 check (id = 1),
+  count bigint   not null default 0
+);
+insert into public.site_likes (id) values (1) on conflict (id) do nothing;
+
+alter table public.site_likes enable row level security;
+
+drop policy if exists "site_likes readable by everyone" on public.site_likes;
+create policy "site_likes readable by everyone" on public.site_likes for select
+  using (true);
+
+-- No insert/update/delete policies: only the RPC below can mutate this table.
+
+create or replace function public.increment_like()
+returns bigint
+language sql
+security definer
+set search_path = public
+as $$
+  update public.site_likes set count = count + 1 where id = 1
+  returning count;
+$$;
+
+grant execute on function public.increment_like() to anon, authenticated;

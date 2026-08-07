@@ -539,6 +539,211 @@
     font-weight: 500;
   }
 
+  /* --- profile card ----------------------------------------------------- */
+  /* The framed photo with orbital rings, sparkles and a heart badge. Made
+     of layered SVGs positioned around the image; no raster assets. */
+  .profile-photo-frame {
+    position: relative;
+    width: 14rem;
+    height: 14rem;
+    flex-shrink: 0;
+  }
+  @media (min-width: 640px) {
+    .profile-photo-frame {
+      width: 16rem;
+      height: 16rem;
+    }
+  }
+  .profile-photo-frame > .profile-photo-image {
+    position: absolute;
+    inset: 1.25rem;
+    border-radius: 9999px;
+    object-fit: cover;
+    background-color: var(--accent-soft);
+    box-shadow:
+      0 0 0 6px var(--surface),
+      0 0 0 7px var(--border),
+      var(--shadow-lift);
+    z-index: 1;
+  }
+  .profile-decor-dots {
+    position: absolute;
+    top: -0.25rem;
+    left: -0.25rem;
+    width: 4.5rem;
+    height: 4.5rem;
+    background-image: radial-gradient(
+      circle,
+      var(--accent) 1px,
+      transparent 1.5px
+    );
+    background-size: 0.625rem 0.625rem;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .profile-decor-ring {
+    position: absolute;
+    inset: 0;
+    color: var(--accent);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .profile-decor-blob {
+    position: absolute;
+    inset: 0.5rem;
+    border-radius: 9999px;
+    background:
+      radial-gradient(60% 50% at 30% 30%, var(--accent-soft) 0%, transparent 60%),
+      radial-gradient(50% 40% at 75% 75%, var(--accent-soft) 0%, transparent 65%);
+    filter: blur(6px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .profile-decor-sparkle {
+    position: absolute;
+    color: var(--accent);
+    pointer-events: none;
+  }
+
+  /* Round "OPEN TO WORK" / "새로운 기회를 찾는 중" badge (large variant of
+     the small status pill still used elsewhere). */
+  .status-pill-lg {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--success-soft);
+    padding: 0.4375rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    color: var(--success);
+  }
+  .status-pill-lg > .status-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--success);
+    box-shadow: 0 0 0 0 currentColor;
+    animation: status-pulse 2s ease-out infinite;
+  }
+  @keyframes status-pulse {
+    0%   { box-shadow: 0 0 0 0 var(--success); opacity: 1; }
+    70%  { box-shadow: 0 0 0 6px transparent; opacity: 1; }
+    100% { box-shadow: 0 0 0 0 transparent; opacity: 1; }
+  }
+
+  /* Large primary/secondary CTA used on the profile card. */
+  .btn-lg {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+    border-radius: 0.75rem;
+  }
+
+  /* Four contact cards under the bio. Icon on top, label + value stacked. */
+  .contact-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 1rem 0.75rem;
+    border-radius: 0.875rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+    transition:
+      transform 0.2s var(--ease-out-quart),
+      box-shadow 0.2s var(--ease-out-quart),
+      border-color 0.2s var(--ease-out-quart);
+  }
+  @media (hover: hover) {
+    .contact-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow-lift);
+    }
+  }
+  .contact-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    background-color: var(--accent);
+    color: var(--accent-fg);
+  }
+  .contact-card-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .contact-card-value {
+    font-size: 0.75rem;
+    color: var(--accent);
+    font-weight: 550;
+    word-break: break-all;
+  }
+
+  /* Heart badge sitting on the bottom-right of the photo. Click increments a
+     server-side counter; the count number sits under the profile card. */
+  .heart-button {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition:
+      transform 0.15s var(--ease-out-quart),
+      background-color 0.15s ease,
+      color 0.15s ease;
+    z-index: 2;
+  }
+  .heart-button:not(:disabled):hover {
+    transform: scale(1.08);
+  }
+  .heart-button[data-liked="true"] {
+    background-color: var(--accent);
+    color: var(--accent-fg);
+    border-color: transparent;
+  }
+  .heart-button svg {
+    transition: transform 0.25s var(--ease-out-quart);
+  }
+  .heart-button[data-liked="true"] svg {
+    transform: scale(1.15);
+    animation: heart-pop 0.5s var(--ease-out-quart);
+  }
+  @keyframes heart-pop {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.35); }
+    70%  { transform: scale(0.95); }
+    100% { transform: scale(1.15); }
+  }
+
+  .likes-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--fg-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+  .likes-count > strong {
+    color: var(--accent);
+    font-weight: 650;
+  }
+
   /* Hides content visually but keeps it for screen readers. */
   .sr-only-focusable:not(:focus):not(:focus-within) {
     position: absolute;
@@ -649,6 +854,19 @@
   .card {
     box-shadow: none;
     break-inside: avoid;
+  }
+  /* The playful frame around the photo becomes visual noise on paper. */
+  .profile-decor-dots,
+  .profile-decor-ring,
+  .profile-decor-blob,
+  .profile-decor-sparkle,
+  .heart-button,
+  .likes-count,
+  .status-pill-lg .status-dot {
+    display: none !important;
+  }
+  .profile-photo-image {
+    box-shadow: none !important;
   }
   a[href^="http"]::after {
     content: " (" attr(href) ")";
