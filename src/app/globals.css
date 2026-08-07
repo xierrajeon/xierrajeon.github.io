@@ -1,0 +1,654 @@
+@import "tailwindcss";
+
+/* Theme is toggled by a `.dark` class on <html>, not by the OS media query
+   alone, so the header switch can override the system preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   Design tokens
+   Raw values live on :root / .dark; @theme inline exposes them to Tailwind so
+   `bg-surface`, `text-fg-muted`, `border-border` etc. all work.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+
+  /* Page sits on a faint lavender wash so pure-white cards read as raised. */
+  --bg: oklch(97.8% 0.005 280);
+  --bg-subtle: oklch(96.4% 0.007 280);
+  --surface: oklch(100% 0 0);
+  --surface-hover: oklch(98.2% 0.006 280);
+  --surface-sunken: oklch(96.2% 0.007 280);
+
+  --border: oklch(91.5% 0.008 280);
+  --border-strong: oklch(85% 0.011 280);
+
+  --fg: oklch(22% 0.02 275);
+  --fg-muted: oklch(49% 0.016 275);
+  /* Kept at or below 53% L: these tokens carry 11–12px text, which still needs
+     a 4.5:1 ratio against the white card surface. */
+  --fg-subtle: oklch(53% 0.015 275);
+
+  --accent: oklch(53% 0.21 276);
+  --accent-hover: oklch(47% 0.21 276);
+  --accent-fg: oklch(99% 0 0);
+  --accent-soft: oklch(95.5% 0.028 276);
+  --accent-ring: oklch(53% 0.21 276 / 0.32);
+
+  /* The dark "함께 일하고 싶으신가요?" panel, inverted in both themes. */
+  --invert-bg: oklch(21% 0.035 265);
+  --invert-fg: oklch(97% 0.005 265);
+  --invert-fg-muted: oklch(76% 0.012 265);
+
+  --success: oklch(58% 0.14 155);
+  --success-soft: oklch(95% 0.04 155);
+  --warn: oklch(66% 0.15 70);
+  --warn-soft: oklch(96% 0.05 80);
+  --danger: oklch(56% 0.19 25);
+  --danger-soft: oklch(95% 0.04 25);
+
+  --shadow-color: 265 25% 12%;
+
+  /* Two rows below md (logo row + tab row), one row above. Anchor scrolling
+     reads this, so it has to track SiteHeader's real height. */
+  --header-h: 6.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-h: 3.5rem;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: oklch(16% 0.012 265);
+  --bg-subtle: oklch(19% 0.013 265);
+  --surface: oklch(21% 0.014 265);
+  --surface-hover: oklch(25% 0.015 265);
+  --surface-sunken: oklch(18% 0.012 265);
+
+  --border: oklch(30% 0.014 265);
+  --border-strong: oklch(38% 0.016 265);
+
+  --fg: oklch(96% 0.004 265);
+  --fg-muted: oklch(72% 0.011 265);
+  --fg-subtle: oklch(64% 0.013 265);
+
+  --accent: oklch(72% 0.15 265);
+  --accent-hover: oklch(78% 0.15 265);
+  --accent-fg: oklch(17% 0.02 265);
+  --accent-soft: oklch(28% 0.06 265);
+  --accent-ring: oklch(72% 0.15 265 / 0.4);
+
+  --invert-bg: oklch(13% 0.02 265);
+  --invert-fg: oklch(97% 0.005 265);
+  --invert-fg-muted: oklch(74% 0.012 265);
+
+  --success: oklch(74% 0.15 155);
+  --success-soft: oklch(28% 0.05 155);
+  --warn: oklch(80% 0.14 80);
+  --warn-soft: oklch(30% 0.05 80);
+  --danger: oklch(70% 0.17 25);
+  --danger-soft: oklch(29% 0.06 25);
+
+  --shadow-color: 265 60% 2%;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --color-invert-bg: var(--invert-bg);
+  --color-invert-fg: var(--invert-fg);
+  --color-invert-fg-muted: var(--invert-fg-muted);
+
+  /* Latin text uses Geist; Korean falls through to the platform UI font so no
+     multi-megabyte Korean webfont is ever downloaded. */
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Pretendard Variable", Pretendard, "Malgun Gothic",
+    "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+    "Apple SD Gothic Neo", monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --radius-card: 0.875rem;
+
+  --shadow-subtle: 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 0.05),
+    0 4px 12px -4px hsl(var(--shadow-color) / 0.08);
+  --shadow-lift: 0 2px 4px hsl(var(--shadow-color) / 0.06),
+    0 12px 28px -8px hsl(var(--shadow-color) / 0.16);
+  --shadow-pop: 0 8px 40px -8px hsl(var(--shadow-color) / 0.24);
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+@layer base {
+  * {
+    min-width: 0; /* let flex/grid children shrink instead of forcing overflow */
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Anchors (TOC jumps) must clear the sticky header. */
+    scroll-padding-top: calc(var(--header-h) + 1.5rem);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    text-wrap: pretty;
+    -webkit-font-smoothing: antialiased;
+    overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    font-weight: 650;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+    color: var(--fg);
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Native controls (date pickers, selects) should follow the theme. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Reusable primitives
+   These are the shared vocabulary every component composes from — changing a
+   rule here restyles the whole site.
+   ========================================================================== */
+@layer components {
+  /* --- layout ------------------------------------------------------------ */
+  .container-page {
+    width: 100%;
+    max-width: 68rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  .container-prose {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
+  }
+
+  .stack-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5rem;
+  }
+
+  /* --- surfaces --------------------------------------------------------- */
+  .card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-interactive {
+    transition:
+      transform 0.25s var(--ease-out-quart),
+      box-shadow 0.25s var(--ease-out-quart),
+      border-color 0.25s var(--ease-out-quart);
+  }
+  @media (hover: hover) {
+    .card-interactive:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lift);
+      border-color: var(--border-strong);
+    }
+  }
+  .card-interactive:active {
+    transform: translateY(-1px);
+  }
+
+  /* --- buttons ---------------------------------------------------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.625rem;
+    border: 1px solid transparent;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 550;
+    line-height: 1.25rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease,
+      opacity 0.15s ease;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: var(--accent);
+    color: var(--accent-fg);
+  }
+  .btn-primary:not(:disabled):hover {
+    background-color: var(--accent-hover);
+  }
+
+  .btn-secondary {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--fg);
+  }
+  .btn-secondary:not(:disabled):hover {
+    background-color: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--fg-muted);
+  }
+  .btn-ghost:not(:disabled):hover {
+    background-color: var(--surface-hover);
+    color: var(--fg);
+  }
+
+  .btn-danger {
+    background-color: transparent;
+    border-color: var(--border);
+    color: var(--danger);
+  }
+  .btn-danger:not(:disabled):hover {
+    background-color: var(--danger-soft);
+    border-color: var(--danger);
+  }
+
+  .btn-sm {
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+  .btn-icon {
+    padding: 0.5rem;
+    aspect-ratio: 1;
+  }
+
+  /* --- tags / badges ---------------------------------------------------- */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 0.375rem;
+    background-color: var(--surface-sunken);
+    border: 1px solid var(--border);
+    padding: 0.0625rem 0.4375rem;
+    font-size: var(--text-2xs);
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+
+  .tag-accent {
+    background-color: var(--accent-soft);
+    border-color: transparent;
+    color: var(--accent);
+  }
+
+  /* Stack tags get a per-technology hue via a --tag-h custom property, so one
+     rule covers every tag that will ever exist. See src/lib/tagColor.ts. */
+  .tag-tech {
+    background-color: oklch(95.5% 0.042 var(--tag-h, 276));
+    border-color: transparent;
+    color: oklch(44% 0.16 var(--tag-h, 276));
+    font-weight: 550;
+  }
+  .dark .tag-tech {
+    background-color: oklch(30% 0.06 var(--tag-h, 276));
+    color: oklch(84% 0.11 var(--tag-h, 276));
+  }
+
+  /* "✓ 페이지 로딩 속도 40% 개선" — one measurable outcome per chip. */
+  .highlight-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    border-radius: 0.375rem;
+    background-color: var(--accent-soft);
+    padding: 0.1875rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .highlight-chip::before {
+    content: "✓";
+    font-size: 0.6875rem;
+    opacity: 0.75;
+  }
+
+  /* Right-aligned date pill on timeline rows. */
+  .date-pill {
+    display: inline-block;
+    border-radius: 0.4375rem;
+    background-color: var(--surface-sunken);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    font-weight: 550;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .date-pill-accent {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .tag-button {
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .tag-button:hover {
+    border-color: var(--border-strong);
+    color: var(--fg);
+  }
+  .tag-button[aria-pressed="true"] {
+    background-color: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+  }
+
+  /* --- form controls ---------------------------------------------------- */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .label {
+    font-size: 0.8125rem;
+    font-weight: 550;
+    color: var(--fg-muted);
+  }
+
+  .input {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    padding: 0.5rem 0.6875rem;
+    /* 16px avoids iOS Safari zooming on focus. */
+    font-size: 1rem;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  @media (min-width: 640px) {
+    .input {
+      font-size: 0.875rem;
+    }
+  }
+  .input::placeholder {
+    color: var(--fg-subtle);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+  }
+
+  textarea.input {
+    min-height: 6rem;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  /* --- misc ------------------------------------------------------------- */
+  .link-underline {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.15s ease;
+  }
+  .link-underline:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .divider {
+    height: 1px;
+    background-color: var(--border);
+    border: 0;
+  }
+
+  .skeleton {
+    background-color: var(--surface-sunken);
+    border-radius: 0.5rem;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+
+  .eyebrow {
+    font-size: var(--text-2xs);
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+
+  /* Inline `code` from markdown. Defined as its own class so it looks the same
+     inside a heading, a card title or a paragraph. */
+  .code-chip {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background-color: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: 0.3125rem;
+    padding: 0.0625rem 0.3125rem;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  /* Hides content visually but keeps it for screen readers. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-in {
+  animation: fade-in-up 0.4s var(--ease-out-quart) both;
+}
+
+/* ==========================================================================
+   Rich text rendered from markdown (project bodies, timeline descriptions)
+   ========================================================================== */
+@layer components {
+  .rich-text {
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--fg-muted);
+  }
+  .rich-text > * + * {
+    margin-top: 0.875rem;
+  }
+  .rich-text strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .rich-text a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .rich-text ul,
+  .rich-text ol {
+    padding-left: 1.125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+  .rich-text ul {
+    list-style: disc;
+  }
+  .rich-text ol {
+    list-style: decimal;
+  }
+  .rich-text li::marker {
+    color: var(--fg-subtle);
+  }
+  .rich-text h3,
+  .rich-text h4 {
+    color: var(--fg);
+    font-size: 1rem;
+    margin-top: 1.5rem;
+  }
+  .rich-text blockquote {
+    border-left: 2px solid var(--border-strong);
+    padding-left: 0.875rem;
+    color: var(--fg-subtle);
+  }
+}
+
+/* ==========================================================================
+   Print — the resume tab should produce a usable PDF via ⌘P
+   ========================================================================== */
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --fg: #000;
+    --fg-muted: #333;
+    --fg-subtle: #555;
+    --border: #ddd;
+    --accent: #000;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.7em;
+    color: #555;
+    word-break: break-all;
+  }
+}

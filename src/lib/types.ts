@@ -1,0 +1,248 @@
+/**
+ * Mirrors supabase/schema.sql. Keep the two in sync when adding columns.
+ */
+
+export type Lang = "ko" | "en";
+
+export const TIMELINE_CATEGORIES = [
+  "career",
+  "education",
+  "award",
+  "activity",
+] as const;
+
+export type TimelineCategory = (typeof TIMELINE_CATEGORIES)[number];
+
+export type DatePrecision = "day" | "month" | "year";
+
+export interface Profile {
+  id: number;
+  name_ko: string;
+  name_en: string;
+  tagline_ko: string;
+  tagline_en: string;
+  bio_ko: string;
+  bio_en: string;
+  /** e.g. "새로운 기회를 찾는 중" — shown as a badge above the name. */
+  status_ko: string | null;
+  status_en: string | null;
+  /** Adds the pulsing green dot and switches the badge to the accent tone. */
+  status_active: boolean;
+  photo_url: string | null;
+  og_image_url: string | null;
+  resume_pdf_url: string | null;
+  email: string | null;
+  phone: string | null;
+  location_ko: string | null;
+  location_en: string | null;
+  github_url: string | null;
+  linkedin_url: string | null;
+  blog_url: string | null;
+  website_url: string | null;
+  updated_at?: string;
+}
+
+export interface TimelineEntry {
+  id: string;
+  category: TimelineCategory;
+  title_ko: string;
+  title_en: string;
+  subtitle_ko: string;
+  subtitle_en: string;
+  description_ko: string;
+  description_en: string;
+  start_date: string | null;
+  end_date: string | null;
+  is_current: boolean;
+  date_precision: DatePrecision;
+  location_ko: string | null;
+  location_en: string | null;
+  url: string | null;
+  tags: string[];
+  sort_order: number;
+  is_published: boolean;
+}
+
+export interface Project {
+  id: string;
+  slug: string;
+  title_ko: string;
+  title_en: string;
+  summary_ko: string;
+  summary_en: string;
+  thumbnail_url: string | null;
+  cover_url: string | null;
+  tags: string[];
+  category_ko: string | null;
+  category_en: string | null;
+  repo_url: string | null;
+  demo_url: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  is_ongoing: boolean;
+  role_ko: string | null;
+  role_en: string | null;
+  team_size: number | null;
+  sort_order: number;
+  is_published: boolean;
+  is_featured: boolean;
+}
+
+export interface Skill {
+  id: string;
+  group_ko: string;
+  group_en: string;
+  name: string;
+  level: number | null;
+  sort_order: number;
+  is_published: boolean;
+}
+
+/* ---------------------------------------------------------------------------
+ * Project detail body blocks
+ *
+ * Every block row is { id, project_id, type, sort_order, data }. The `data`
+ * shape is discriminated by `type`; ProjectBlock below is the union the
+ * renderer and the admin editor both consume.
+ * ------------------------------------------------------------------------- */
+
+export interface BlockBase {
+  id: string;
+  project_id: string;
+  sort_order: number;
+}
+
+export interface HeadingBlockData {
+  text_ko: string;
+  text_en: string;
+  /** 2 = TOC top level, 3 = nested under the closest level 2. */
+  level: 2 | 3;
+}
+
+export interface TextBlockData {
+  text_ko: string;
+  text_en: string;
+}
+
+export interface ImageBlockData {
+  url: string;
+  alt_ko: string;
+  alt_en: string;
+  caption_ko: string;
+  caption_en: string;
+  /** Intrinsic size, captured at upload time to reserve space and avoid CLS. */
+  width: number | null;
+  height: number | null;
+  /** Renders on a soft backdrop with a device-ish frame — good for UI shots. */
+  framed?: boolean;
+}
+
+export interface GalleryItem {
+  url: string;
+  alt_ko: string;
+  alt_en: string;
+  caption_ko: string;
+  caption_en: string;
+  width?: number | null;
+  height?: number | null;
+}
+
+export interface GalleryBlockData {
+  items: GalleryItem[];
+  columns: 2 | 3;
+}
+
+export type VideoProvider = "youtube" | "vimeo" | "file";
+
+export interface VideoBlockData {
+  provider: VideoProvider;
+  /** Watch URL for youtube/vimeo, Supabase Storage public URL for `file`. */
+  url: string;
+  poster_url: string | null;
+  caption_ko: string;
+  caption_en: string;
+  /** `file` only — silent looping clips read as animated GIFs. */
+  autoplay: boolean;
+  loop: boolean;
+}
+
+export interface CodeBlockData {
+  language: string;
+  code: string;
+  filename: string;
+  caption_ko: string;
+  caption_en: string;
+}
+
+export interface CalloutBlockData {
+  icon: string;
+  tone: "info" | "success" | "warn";
+  text_ko: string;
+  text_en: string;
+}
+
+/**
+ * The "이런 기능을 만들었어요" unit: a title, a description, a screenshot or
+ * clip, and an optional deep link to the exact code on GitHub.
+ */
+export interface FeatureBlockData {
+  title_ko: string;
+  title_en: string;
+  body_ko: string;
+  body_en: string;
+  media_url: string | null;
+  media_kind: "image" | "video";
+  media_width?: number | null;
+  media_height?: number | null;
+  repo_url: string | null;
+  /** Media on the right instead of the left. */
+  reversed?: boolean;
+}
+
+export interface StackGroup {
+  label_ko: string;
+  label_en: string;
+  items: string[];
+}
+
+export interface StackBlockData {
+  groups: StackGroup[];
+}
+
+export interface LinkBlockData {
+  url: string;
+  label_ko: string;
+  label_en: string;
+  description_ko: string;
+  description_en: string;
+}
+
+export type DividerBlockData = Record<string, never>;
+
+export type ProjectBlock = BlockBase &
+  (
+    | { type: "heading"; data: HeadingBlockData }
+    | { type: "text"; data: TextBlockData }
+    | { type: "image"; data: ImageBlockData }
+    | { type: "gallery"; data: GalleryBlockData }
+    | { type: "video"; data: VideoBlockData }
+    | { type: "code"; data: CodeBlockData }
+    | { type: "callout"; data: CalloutBlockData }
+    | { type: "feature"; data: FeatureBlockData }
+    | { type: "stack"; data: StackBlockData }
+    | { type: "link"; data: LinkBlockData }
+    | { type: "divider"; data: DividerBlockData }
+  );
+
+export type BlockType = ProjectBlock["type"];
+
+export interface ProjectWithBlocks extends Project {
+  blocks: ProjectBlock[];
+}
+
+/** Everything the resume tab needs, resolved in one pass. */
+export interface ResumeData {
+  profile: Profile;
+  entries: TimelineEntry[];
+  skills: Skill[];
+}

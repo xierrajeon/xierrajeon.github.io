@@ -1,0 +1,216 @@
+"use client";
+
+import { useId, type ReactNode } from "react";
+
+/**
+ * Form primitives shared by every admin screen. Every content column in the
+ * schema exists twice (`*_ko` / `*_en`), so `BilingualField` is the workhorse
+ * here — it is what keeps each editor form short.
+ */
+
+export function Field({
+  label,
+  hint,
+  children,
+  className,
+}: {
+  label?: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`field ${className ?? ""}`}>
+      {label && <span className="label">{label}</span>}
+      {children}
+      {hint && <p className="text-2xs text-fg-subtle">{hint}</p>}
+    </div>
+  );
+}
+
+export function TextInput({
+  label,
+  hint,
+  value,
+  onChange,
+  ...rest
+}: {
+  label?: string;
+  hint?: string;
+  value: string;
+  onChange: (value: string) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  const id = useId();
+  return (
+    <div className="field">
+      {label && (
+        <label className="label" htmlFor={id}>
+          {label}
+        </label>
+      )}
+      <input
+        id={id}
+        className="input"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        {...rest}
+      />
+      {hint && <p className="text-2xs text-fg-subtle">{hint}</p>}
+    </div>
+  );
+}
+
+export function TextArea({
+  label,
+  hint,
+  value,
+  onChange,
+  rows = 4,
+  ...rest
+}: {
+  label?: string;
+  hint?: string;
+  value: string;
+  onChange: (value: string) => void;
+} & Omit<
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+  "value" | "onChange"
+>) {
+  const id = useId();
+  return (
+    <div className="field">
+      {label && (
+        <label className="label" htmlFor={id}>
+          {label}
+        </label>
+      )}
+      <textarea
+        id={id}
+        className="input"
+        rows={rows}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        {...rest}
+      />
+      {hint && <p className="text-2xs text-fg-subtle">{hint}</p>}
+    </div>
+  );
+}
+
+/** Korean and English variants of one field, side by side. */
+export function BilingualField({
+  label,
+  hint,
+  ko,
+  en,
+  onChangeKo,
+  onChangeEn,
+  multiline = false,
+  rows = 3,
+  placeholderKo,
+  placeholderEn,
+}: {
+  label: string;
+  hint?: string;
+  ko: string;
+  en: string;
+  onChangeKo: (value: string) => void;
+  onChangeEn: (value: string) => void;
+  multiline?: boolean;
+  rows?: number;
+  placeholderKo?: string;
+  placeholderEn?: string;
+}) {
+  const Control = multiline ? TextArea : TextInput;
+
+  return (
+    <div className="field">
+      <span className="label">{label}</span>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Control
+          value={ko}
+          onChange={onChangeKo}
+          rows={rows}
+          placeholder={placeholderKo ?? "한국어"}
+          aria-label={`${label} (한국어)`}
+        />
+        <Control
+          value={en}
+          onChange={onChangeEn}
+          rows={rows}
+          placeholder={placeholderEn ?? "English"}
+          aria-label={`${label} (English)`}
+        />
+      </div>
+      <p className="text-2xs text-fg-subtle">
+        {hint ?? "한쪽만 채우면 다른 언어에서도 채운 쪽이 표시됩니다."}
+      </p>
+    </div>
+  );
+}
+
+export function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex items-start gap-2.5">
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
+      />
+      <div>
+        <label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </label>
+        {hint && <p className="text-2xs text-fg-subtle">{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
+export function Select<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label?: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="field">
+      {label && (
+        <label className="label" htmlFor={id}>
+          {label}
+        </label>
+      )}
+      <select
+        id={id}
+        className="input"
+        value={value}
+        onChange={(event) => onChange(event.target.value as T)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}

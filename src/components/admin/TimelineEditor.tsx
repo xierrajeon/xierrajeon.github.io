@@ -1,0 +1,453 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  EyeOff,
+  Loader2,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import {
+  BilingualField,
+  Select,
+  TextInput,
+  Toggle,
+} from "./ui/Field";
+import { SaveBar } from "./ui/SaveBar";
+import { TagInput } from "./ui/TagInput";
+import { CATEGORY_CONFIG, TimelineSection } from "@/components/resume/TimelineSection";
+import { getSupabaseBrowser } from "@/lib/supabase";
+import { useSaver } from "@/lib/admin/useSaver";
+import { TIMELINE_CATEGORIES, type DatePrecision, type TimelineCategory, type TimelineEntry } from "@/lib/types";
+
+/** Rows created in the browser carry a temporary id until they are inserted. */
+const TEMP_PREFIX = "tmp-";
+const isTemp = (id: string) => id.startsWith(TEMP_PREFIX);
+
+function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
+  return {
+    id: `${TEMP_PREFIX}${Date.now().toString(36)}-${index}`,
+    category,
+    title_ko: "",
+    title_en: "",
+    subtitle_ko: "",
+    subtitle_en: "",
+    description_ko: "",
+    description_en: "",
+    start_date: null,
+    end_date: null,
+    is_current: false,
+    date_precision: "month",
+    location_ko: null,
+    location_en: null,
+    url: null,
+    tags: [],
+    sort_order: index,
+    is_published: true,
+  };
+}
+
+const PRECISION_OPTIONS: { value: DatePrecision; label: string }[] = [
+  { value: "year", label: "연도까지 (2024)" },
+  { value: "month", label: "월까지 (2024.03)" },
+  { value: "day", label: "일까지 (2024.03.15)" },
+];
+
+function EntryCard({
+  entry,
+  index,
+  count,
+  allTags,
+  onChange,
+  onMove,
+  onRemove,
+}: {
+  entry: TimelineEntry;
+  index: number;
+  count: number;
+  allTags: string[];
+  onChange: (next: TimelineEntry) => void;
+  onMove: (direction: -1 | 1) => void;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(isTemp(entry.id));
+  const config = CATEGORY_CONFIG[entry.category];
+
+  function set<K extends keyof TimelineEntry>(key: K, value: TimelineEntry[K]) {
+    onChange({ ...entry, [key]: value });
+  }
+
+  const heading =
+    entry.title_ko || entry.title_en || `새 ${config.ko} 항목`;
+
+  return (
+    <li className="card overflow-hidden">
+      <div className="flex items-center gap-2 p-3">
+        <div className="flex flex-col">
+          <button
+            type="button"
+            onClick={() => onMove(-1)}
+            disabled={index === 0}
+            className="btn btn-ghost p-0.5 disabled:opacity-25"
+            aria-label="위로 이동"
+          >
+            <ChevronUp className="size-3.5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onMove(1)}
+            disabled={index === count - 1}
+            className="btn btn-ghost p-0.5 disabled:opacity-25"
+            aria-label="아래로 이동"
+          >
+            <ChevronDown className="size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          className="min-w-0 flex-1 text-left"
+        >
+          <span className="flex items-center gap-1.5 truncate text-sm font-semibold">
+            {heading}
+            {!entry.is_published && (
+              <EyeOff className="size-3.5 shrink-0 text-warn" aria-label="비공개" />
+            )}
+          </span>
+          <span className="block truncate text-2xs text-fg-subtle">
+            {[entry.subtitle_ko || entry.subtitle_en, entry.start_date]
+              .filter(Boolean)
+              .join(" · ") || "내용 없음"}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onRemove}
+          className="btn btn-ghost btn-icon btn-sm text-danger"
+          aria-label="삭제"
+        >
+          <Trash2 className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      {open && (
+        <div className="flex flex-col gap-4 border-t border-border p-4">
+          <BilingualField
+            label={
+              entry.category === "award"
+                ? "수상명 · 자격증명"
+                : entry.category === "education"
+                  ? "학교명"
+                  : entry.category === "career"
+                    ? "회사명"
+                    : "활동명"
+            }
+            ko={entry.title_ko}
+            en={entry.title_en}
+            onChangeKo={(v) => set("title_ko", v)}
+            onChangeEn={(v) => set("title_en", v)}
+          />
+
+          <BilingualField
+            label={
+              entry.category === "award"
+                ? "주최 기관"
+                : entry.category === "education"
+                  ? "전공 · 학위"
+                  : entry.category === "career"
+                    ? "직책"
+                    : "역할"
+            }
+            ko={entry.subtitle_ko}
+            en={entry.subtitle_en}
+            onChangeKo={(v) => set("subtitle_ko", v)}
+            onChangeEn={(v) => set("subtitle_en", v)}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <TextInput
+              label="시작일"
+              type="date"
+              value={entry.start_date ?? ""}
+              onChange={(v) => set("start_date", v || null)}
+            />
+            <TextInput
+              label="종료일"
+              type="date"
+              value={entry.end_date ?? ""}
+              onChange={(v) => set("end_date", v || null)}
+              disabled={entry.is_current}
+              hint={
+                entry.is_current
+                  ? "진행 중이면 비활성화됩니다."
+                  : "단일 시점(수상 등)이면 비워두세요."
+              }
+            />
+            <Select
+              label="날짜 표기"
+              value={entry.date_precision}
+              options={PRECISION_OPTIONS}
+              onChange={(v) => set("date_precision", v)}
+            />
+          </div>
+
+          <Toggle
+            label={entry.category === "career" ? "재직 중" : "진행 중"}
+            checked={entry.is_current}
+            onChange={(v) => {
+              onChange({
+                ...entry,
+                is_current: v,
+                // Keeping a stale end date alongside "in progress" would render
+                // contradictory text.
+                end_date: v ? null : entry.end_date,
+              });
+            }}
+          />
+
+          <BilingualField
+            label="설명"
+            multiline
+            rows={4}
+            ko={entry.description_ko}
+            en={entry.description_en}
+            onChangeKo={(v) => set("description_ko", v)}
+            onChangeEn={(v) => set("description_en", v)}
+            hint="줄 앞에 - 를 붙이면 목록이 됩니다. **굵게**, `코드` 도 가능합니다."
+          />
+
+          <TagInput
+            label="성과 · 키워드 칩"
+            hint="숫자가 있는 성과 한 줄이 가장 잘 읽힙니다. 예: 페이지 로딩 속도 40% 개선"
+            value={entry.tags}
+            onChange={(tags) => set("tags", tags)}
+            colored={false}
+            suggestions={allTags}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <TextInput
+              label="관련 링크"
+              type="url"
+              placeholder="https://"
+              value={entry.url ?? ""}
+              onChange={(v) => set("url", v || null)}
+            />
+            <BilingualField
+              label="장소"
+              ko={entry.location_ko ?? ""}
+              en={entry.location_en ?? ""}
+              onChangeKo={(v) => set("location_ko", v || null)}
+              onChangeEn={(v) => set("location_en", v || null)}
+            />
+          </div>
+
+          <Toggle
+            label="공개"
+            hint="끄면 사이트에서 숨겨집니다. 데이터는 남아 있습니다."
+            checked={entry.is_published}
+            onChange={(v) => set("is_published", v)}
+          />
+        </div>
+      )}
+    </li>
+  );
+}
+
+export function TimelineEditor() {
+  const [category, setCategory] = useState<TimelineCategory>("career");
+  const [rows, setRows] = useState<TimelineEntry[] | null>(null);
+  const [deleted, setDeleted] = useState<string[]>([]);
+  const [dirty, setDirty] = useState(false);
+  const { status, error, run, reset } = useSaver();
+
+  useEffect(() => {
+    getSupabaseBrowser()
+      .from("timeline_entries")
+      .select("*")
+      .order("sort_order", { ascending: true })
+      .order("start_date", { ascending: false, nullsFirst: false })
+      .then(({ data }) => setRows((data ?? []) as TimelineEntry[]));
+  }, []);
+
+  const visible = useMemo(
+    () => (rows ?? []).filter((row) => row.category === category),
+    [rows, category],
+  );
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const row of rows ?? []) for (const tag of row.tags) set.add(tag);
+    return [...set];
+  }, [rows]);
+
+  function mutate(next: TimelineEntry[]) {
+    setRows(next);
+    setDirty(true);
+    reset();
+  }
+
+  function replaceInCategory(nextVisible: TimelineEntry[]) {
+    const others = (rows ?? []).filter((row) => row.category !== category);
+    mutate([...others, ...nextVisible]);
+  }
+
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= visible.length) return;
+    const next = [...visible];
+    [next[index], next[target]] = [next[target], next[index]];
+    replaceInCategory(next);
+  }
+
+  function remove(entry: TimelineEntry) {
+    if (!confirm(`"${entry.title_ko || entry.title_en || "이 항목"}" 을 삭제할까요?`))
+      return;
+    if (!isTemp(entry.id)) setDeleted((ids) => [...ids, entry.id]);
+    replaceInCategory(visible.filter((row) => row.id !== entry.id));
+  }
+
+  async function save() {
+    if (!rows) return;
+    const supabase = getSupabaseBrowser();
+
+    const ok = await run(async () => {
+      if (deleted.length) {
+        const { error: deleteError } = await supabase
+          .from("timeline_entries")
+          .delete()
+          .in("id", deleted);
+        if (deleteError) throw deleteError;
+      }
+
+      // Display order is the array order, per category.
+      const ordered = TIMELINE_CATEGORIES.flatMap((cat) =>
+        rows
+          .filter((row) => row.category === cat)
+          .map((row, index) => ({ ...row, sort_order: index })),
+      );
+
+      const inserts = ordered
+        .filter((row) => isTemp(row.id))
+        .map(({ id: _id, ...rest }) => rest);
+      const updates = ordered.filter((row) => !isTemp(row.id));
+
+      if (inserts.length) {
+        const { error: insertError } = await supabase
+          .from("timeline_entries")
+          .insert(inserts);
+        if (insertError) throw insertError;
+      }
+      if (updates.length) {
+        const { error: upsertError } = await supabase
+          .from("timeline_entries")
+          .upsert(updates);
+        if (upsertError) throw upsertError;
+      }
+
+      // Re-read so temporary ids are replaced by real ones.
+      const { data } = await supabase
+        .from("timeline_entries")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      setRows((data ?? []) as TimelineEntry[]);
+      setDeleted([]);
+    });
+
+    if (ok) setDirty(false);
+  }
+
+  if (!rows) {
+    return (
+      <p className="flex items-center gap-2 py-16 text-sm text-fg-muted">
+        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        불러오는 중…
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div>
+        <h1 className="text-xl font-bold">이력</h1>
+        <p className="mt-1 text-sm text-fg-muted">
+          이력서 탭에 타임라인으로 표시됩니다. 위아래 화살표로 순서를 바꿉니다.
+        </p>
+      </div>
+
+      <div className="-mx-1 flex gap-1 overflow-x-auto px-1">
+        {TIMELINE_CATEGORIES.map((cat) => {
+          const config = CATEGORY_CONFIG[cat];
+          const count = rows.filter((row) => row.category === cat).length;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setCategory(cat)}
+              aria-pressed={category === cat}
+              className={`btn btn-sm shrink-0 gap-1.5 ${
+                category === cat ? "btn-primary" : "btn-secondary"
+              }`}
+            >
+              <config.icon className="size-4" aria-hidden="true" />
+              {config.ko}
+              <span className="tabular-nums opacity-70">{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <ul className="flex flex-col gap-2.5">
+        {visible.map((entry, index) => (
+          <EntryCard
+            key={entry.id}
+            entry={entry}
+            index={index}
+            count={visible.length}
+            allTags={allTags}
+            onChange={(next) =>
+              replaceInCategory(
+                visible.map((row) => (row.id === entry.id ? next : row)),
+              )
+            }
+            onMove={(direction) => move(index, direction)}
+            onRemove={() => remove(entry)}
+          />
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={() =>
+          replaceInCategory([...visible, blankEntry(category, visible.length)])
+        }
+        className="btn btn-secondary self-start border-dashed"
+      >
+        <Plus className="size-4" aria-hidden="true" />
+        {CATEGORY_CONFIG[category].ko} 추가
+      </button>
+
+      <section>
+        <p className="eyebrow mb-2">미리보기</p>
+        <div className="rounded-[var(--radius-card)] bg-bg-subtle p-4">
+          <TimelineSection
+            category={category}
+            entries={visible.filter((row) => row.is_published)}
+          />
+        </div>
+      </section>
+
+      <SaveBar
+        status={status}
+        error={error}
+        dirty={dirty}
+        onSave={() => void save()}
+      />
+    </div>
+  );
+}
