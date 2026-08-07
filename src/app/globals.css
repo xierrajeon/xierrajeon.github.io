@@ -364,6 +364,11 @@
     background-color: var(--surface-sunken);
     border: 1px solid var(--border);
     padding: 0.0625rem 0.4375rem;
+    /* Fixed rather than left to line-height: a stack tag's logo is an <img>,
+       and browsers vary in how much of a replaced element's own box factors
+       into an inline-flex row's height. Locking it here means a tag with a
+       devicons hit and one that falls back to plain text always match. */
+    height: 1.5rem;
     font-size: var(--text-2xs);
     line-height: 1.25rem;
     font-weight: 500;
