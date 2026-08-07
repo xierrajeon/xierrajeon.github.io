@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ArrowUpRight, ExternalLink } from "lucide-react";
 import { useLang } from "@/components/providers/AppProviders";
 import { Markdown } from "@/components/ui/Markdown";
 import { HighlightList } from "@/components/ui/TagList";
@@ -12,8 +13,78 @@ import {
   tr,
 } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n";
+import { routes } from "@/lib/site";
 import { safeExternalUrl } from "@/lib/url";
 import type { EnrollmentStatus, TimelineEntry } from "@/lib/types";
+
+/**
+ * Projects built during a career entry.
+ *
+ * The point is that a short career bullet can hand off to the long write-up, so
+ * every linked item carries a visible affordance: an inward arrow for a project
+ * in the portfolio tab, an outward one for an external address. Items with no
+ * destination still render, just as plain chips — naming the work is useful even
+ * when there is nothing to link to.
+ */
+function LinkedProjects({ entry }: { entry: TimelineEntry }) {
+  const { lang, t } = useLang();
+  const items = entry.linked_projects ?? [];
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-3 flex flex-col gap-1.5">
+      <p className="text-2xs font-semibold text-fg-subtle">
+        {t("resume.linkedProjects")}
+      </p>
+      <ul className="flex flex-wrap gap-1.5">
+        {items.map((item, index) => {
+          const name = tr(item.name_ko, item.name_en, lang);
+          if (!name) return null;
+
+          const external = item.slug ? null : safeExternalUrl(item.url);
+          const shared =
+            "inline-flex items-center gap-1 rounded-md border border-border bg-surface-sunken px-2 py-1 text-xs font-medium transition-colors";
+
+          if (item.slug) {
+            return (
+              <li key={`${item.slug}-${index}`}>
+                <Link
+                  href={routes.project(item.slug)}
+                  className={`${shared} text-accent hover:border-accent hover:bg-accent-soft`}
+                >
+                  {name}
+                  <ArrowRight className="size-3" aria-hidden="true" />
+                </Link>
+              </li>
+            );
+          }
+
+          if (external) {
+            return (
+              <li key={`${external}-${index}`}>
+                <a
+                  href={external}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${shared} text-accent hover:border-accent hover:bg-accent-soft`}
+                >
+                  {name}
+                  <ArrowUpRight className="size-3" aria-hidden="true" />
+                </a>
+              </li>
+            );
+          }
+
+          return (
+            <li key={`${name}-${index}`} className={`${shared} text-fg-muted`}>
+              {name}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 /** Only the two in-progress states earn a coloured badge. */
 const ENROLLMENT_TONE: Record<EnrollmentStatus, string> = {
@@ -195,6 +266,8 @@ export function TimelineItem({ entry }: { entry: TimelineEntry }) {
         )}
 
         <HighlightList items={entry.tags} className="mt-3" />
+
+        {entry.category === "career" && <LinkedProjects entry={entry} />}
       </article>
     </li>
   );

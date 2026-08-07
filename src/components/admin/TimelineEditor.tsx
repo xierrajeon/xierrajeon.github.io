@@ -29,6 +29,7 @@ import {
   TIMELINE_CATEGORIES,
   type DatePrecision,
   type EnrollmentStatus,
+  type LinkedProject,
   type Major,
   type MajorKind,
   type TimelineCategory,
@@ -59,6 +60,7 @@ function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
     tags: [],
     sort_order: index,
     is_published: true,
+    linked_projects: [],
     majors: [],
     gpa: null,
     gpa_scale: category === "education" ? 4.5 : null,
@@ -170,6 +172,156 @@ function MajorsEditor({
   );
 }
 
+/** Where a linked project points. Derived from the data, not stored. */
+type LinkMode = "portfolio" | "external" | "none";
+
+function linkModeOf(item: LinkedProject): LinkMode {
+  if (item.slug) return "portfolio";
+  if (item.url) return "external";
+  return "none";
+}
+
+const LINK_MODE_OPTIONS: { value: LinkMode; label: string }[] = [
+  { value: "portfolio", label: "포트폴리오 프로젝트" },
+  { value: "external", label: "외부 링크" },
+  { value: "none", label: "링크 없음" },
+];
+
+/**
+ * Projects built at a company.
+ *
+ * The portfolio option is a picker over existing published projects rather than
+ * a free-text slug field: the whole value of linking inward is that it lands on
+ * a real page, and a typed slug would only 404.
+ */
+function LinkedProjectsEditor({
+  items,
+  options,
+  onChange,
+}: {
+  items: LinkedProject[];
+  /** Published projects available to link to. */
+  options: { slug: string; title: string }[];
+  onChange: (items: LinkedProject[]) => void;
+}) {
+  function update(index: number, patch: Partial<LinkedProject>) {
+    onChange(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  }
+
+  function setMode(index: number, mode: LinkMode) {
+    // Only one destination can be live, so switching clears the other.
+    if (mode === "portfolio") {
+      update(index, { url: null, slug: items[index].slug ?? options[0]?.slug ?? null });
+    } else if (mode === "external") {
+      update(index, { slug: null, url: items[index].url ?? "" });
+    } else {
+      update(index, { slug: null, url: null });
+    }
+  }
+
+  return (
+    <div className="field">
+      <span className="label">주요 프로젝트</span>
+
+      {items.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {items.map((item, index) => {
+            const mode = linkModeOf(item);
+            return (
+              <li
+                key={index}
+                className="flex flex-col gap-2 rounded-lg border border-border p-2.5"
+              >
+                <div className="flex items-start gap-2">
+                  <div className="grid flex-1 gap-2 sm:grid-cols-2">
+                    <TextInput
+                      label={index === 0 ? "이름 (한국어)" : undefined}
+                      placeholder="Git-Edit-Deploy (GED)"
+                      value={item.name_ko}
+                      onChange={(name_ko) => update(index, { name_ko })}
+                    />
+                    <TextInput
+                      label={index === 0 ? "이름 (English)" : undefined}
+                      placeholder="Git-Edit-Deploy (GED)"
+                      value={item.name_en}
+                      onChange={(name_en) => update(index, { name_en })}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onChange(items.filter((_, i) => i !== index))}
+                    className="btn btn-ghost btn-icon btn-sm mt-1 text-danger"
+                    aria-label={`프로젝트 ${index + 1} 삭제`}
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-[11rem_1fr]">
+                  <Select
+                    label="이동 대상"
+                    value={mode}
+                    options={LINK_MODE_OPTIONS}
+                    onChange={(next) => setMode(index, next)}
+                  />
+
+                  {mode === "portfolio" &&
+                    (options.length > 0 ? (
+                      <Select
+                        label="프로젝트"
+                        value={item.slug ?? ""}
+                        options={[
+                          { value: "", label: "— 선택 —" },
+                          ...options.map((o) => ({
+                            value: o.slug,
+                            label: `${o.title} (/${o.slug})`,
+                          })),
+                        ]}
+                        onChange={(slug) => update(index, { slug: slug || null })}
+                      />
+                    ) : (
+                      <p className="self-end text-2xs text-warn">
+                        연결할 공개 프로젝트가 없습니다. 포트폴리오 탭에서 먼저
+                        프로젝트를 만들고 공개하세요.
+                      </p>
+                    ))}
+
+                  {mode === "external" && (
+                    <UrlInput
+                      label="주소"
+                      value={item.url ?? ""}
+                      onChange={(url) => update(index, { url: url || null })}
+                    />
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <button
+        type="button"
+        onClick={() =>
+          onChange([
+            ...items,
+            { name_ko: "", name_en: "", slug: null, url: null },
+          ])
+        }
+        className="btn btn-secondary btn-sm self-start border-dashed"
+      >
+        <Plus className="size-4" aria-hidden="true" />
+        프로젝트 추가
+      </button>
+
+      <p className="text-2xs text-fg-subtle">
+        회사에서 만든 것을 짧게 나열하고, 긴 설명은 포트폴리오 상세 페이지로
+        넘기세요. 링크가 걸린 항목에는 화살표가 붙습니다.
+      </p>
+    </div>
+  );
+}
+
 /** Score plus the scale it is out of; one without the other means nothing. */
 function GpaFields({
   gpa,
@@ -240,6 +392,7 @@ function EntryCard({
   index,
   count,
   allTags,
+  projectOptions,
   onChange,
   onMove,
   onRemove,
@@ -248,6 +401,7 @@ function EntryCard({
   index: number;
   count: number;
   allTags: string[];
+  projectOptions: { slug: string; title: string }[];
   onChange: (next: TimelineEntry) => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
@@ -434,6 +588,14 @@ function EntryCard({
             suggestions={allTags}
           />
 
+          {entry.category === "career" && (
+            <LinkedProjectsEditor
+              items={entry.linked_projects ?? []}
+              options={projectOptions}
+              onChange={(linked_projects) => set("linked_projects", linked_projects)}
+            />
+          )}
+
           <div className="grid gap-3 sm:grid-cols-2">
             <UrlInput
               label="관련 링크"
@@ -464,19 +626,40 @@ function EntryCard({
 export function TimelineEditor() {
   const [category, setCategory] = useState<TimelineCategory>("career");
   const [rows, setRows] = useState<TimelineEntry[] | null>(null);
+  const [projectOptions, setProjectOptions] = useState<
+    { slug: string; title: string }[]
+  >([]);
   const [deleted, setDeleted] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
   const { status, error, run, reset } = useSaver();
 
   useEffect(() => {
-    getSupabaseBrowser()
-      .from("timeline_entries")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("start_date", { ascending: false, nullsFirst: false })
-      .then(({ data }) =>
-        setRows(normalizeTimelineEntries((data ?? []) as TimelineEntry[])),
+    const supabase = getSupabaseBrowser();
+
+    void (async () => {
+      const [{ data: entries }, { data: projects }] = await Promise.all([
+        supabase
+          .from("timeline_entries")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .order("start_date", { ascending: false, nullsFirst: false }),
+        // Only published projects: linking to a draft would land on a 404.
+        supabase
+          .from("projects")
+          .select("slug,title_ko,title_en")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true }),
+      ]);
+
+      setRows(normalizeTimelineEntries((entries ?? []) as TimelineEntry[]));
+      setProjectOptions(
+        (projects ?? []).map((p) => ({
+          slug: p.slug as string,
+          title:
+            (p.title_ko as string) || (p.title_en as string) || (p.slug as string),
+        })),
       );
+    })();
   }, []);
 
   const visible = useMemo(
@@ -614,6 +797,7 @@ export function TimelineEditor() {
             index={index}
             count={visible.length}
             allTags={allTags}
+            projectOptions={projectOptions}
             onChange={(next) =>
               replaceInCategory(
                 visible.map((row) => (row.id === entry.id ? next : row)),

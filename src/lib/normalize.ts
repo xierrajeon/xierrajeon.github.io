@@ -1,4 +1,4 @@
-import type { Major, TimelineEntry } from "./types";
+import type { LinkedProject, Major, TimelineEntry } from "./types";
 
 /**
  * Coerces a row into the shape the components expect.
@@ -29,11 +29,28 @@ function toMajors(value: unknown): Major[] {
   });
 }
 
+function toLinkedProjects(value: unknown): LinkedProject[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const entry = item as Partial<LinkedProject>;
+    return [
+      {
+        name_ko: typeof entry.name_ko === "string" ? entry.name_ko : "",
+        name_en: typeof entry.name_en === "string" ? entry.name_en : "",
+        slug: entry.slug?.trim() ? entry.slug.trim() : null,
+        url: entry.url?.trim() ? entry.url.trim() : null,
+      },
+    ];
+  });
+}
+
 export function normalizeTimelineEntry(row: TimelineEntry): TimelineEntry {
   return {
     ...row,
     tags: Array.isArray(row.tags) ? row.tags : [],
     majors: toMajors(row.majors),
+    linked_projects: toLinkedProjects(row.linked_projects),
     gpa: toNumber(row.gpa),
     gpa_scale: toNumber(row.gpa_scale),
     enrollment_status: row.enrollment_status ?? null,

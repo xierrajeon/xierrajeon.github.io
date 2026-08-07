@@ -57,6 +57,7 @@ function entry(e: Partial<TimelineEntry> & Pick<TimelineEntry, "id" | "category"
     tags: [],
     sort_order: 0,
     is_published: true,
+    linked_projects: [],
     majors: [],
     gpa: null,
     gpa_scale: null,
@@ -82,6 +83,20 @@ export const seedTimeline: TimelineEntry[] = [
     location_ko: "서울",
     location_en: "Seoul",
     tags: ["React", "TypeScript", "Next.js"],
+    linked_projects: [
+      {
+        name_ko: "포트폴리오 어드민",
+        name_en: "Portfolio Admin",
+        slug: "portfolio-admin",
+        url: null,
+      },
+      {
+        name_ko: "채팅 이모지 첨부 기능",
+        name_en: "Chat Emoji Picker",
+        slug: "chat-emoji-picker",
+        url: null,
+      },
+    ],
     sort_order: 0,
   }),
   entry({

@@ -29,6 +29,20 @@ export interface Major {
   kind: MajorKind;
 }
 
+/**
+ * A project built during a career entry.
+ *
+ * `slug` points at a project in the portfolio tab; `url` covers work that is not
+ * in the portfolio (a live service, a company page). `slug` wins when both are
+ * set, since an internal link is the more useful destination.
+ */
+export interface LinkedProject {
+  name_ko: string;
+  name_en: string;
+  slug: string | null;
+  url: string | null;
+}
+
 export const ENROLLMENT_STATUSES = [
   "enrolled",
   "on_leave",
@@ -85,6 +99,9 @@ export interface TimelineEntry {
   tags: string[];
   sort_order: number;
   is_published: boolean;
+
+  /** Career only: projects built there, linked to the portfolio or outward. */
+  linked_projects: LinkedProject[];
 
   /* --- education only ---------------------------------------------------- */
   /** One school, potentially several majors of different kinds. */
