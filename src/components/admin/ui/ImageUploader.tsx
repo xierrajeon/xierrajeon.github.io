@@ -5,6 +5,10 @@ import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { describeError } from "@/lib/admin/useSaver";
 import { deleteMedia, uploadMedia } from "@/lib/admin/upload";
+import { PhotoCropper } from "./PhotoCropper";
+
+/** Formats we can decode into a canvas — SVG/GIF/AVIF are shipped as-is. */
+const CROPPABLE = /^image\/(jpe?g|png|webp|heic|heif|bmp)$/i;
 
 export interface ImageValue {
   url: string | null;
@@ -26,6 +30,7 @@ export function ImageUploader({
   maxWidth,
   aspect = "aspect-[16/10]",
   circle = false,
+  cropAspect,
 }: {
   label: string;
   hint?: string;
@@ -36,22 +41,33 @@ export function ImageUploader({
   /** Tailwind aspect class for the preview box. */
   aspect?: string;
   circle?: boolean;
+  /**
+   * When set, opens a crop step before upload with this width/height ratio.
+   * Circular masks share the shape via `circle` above; the underlying canvas
+   * is still a rectangle since object-cover on the display side does the
+   * rounding.
+   */
+  cropAspect?: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [cropping, setCropping] = useState<File | null>(null);
 
-  async function handleFile(file: File | undefined) {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("이미지 파일만 올릴 수 있습니다.");
-      return;
-    }
+  async function upload(source: Blob, name: string) {
     setBusy(true);
     setError(null);
     try {
-      const uploaded = await uploadMedia(file, { folder, maxWidth });
+      // `uploadMedia` takes a File so the storage key gets a sensible name.
+      // Cropped blobs come back as WebP, so we mirror that in the filename.
+      const asFile =
+        source instanceof File
+          ? source
+          : new File([source], name.replace(/\.[^.]+$/, ".webp"), {
+              type: "image/webp",
+            });
+      const uploaded = await uploadMedia(asFile, { folder, maxWidth });
       onChange({
         url: uploaded.url,
         width: uploaded.width,
@@ -62,6 +78,20 @@ export function ImageUploader({
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleFile(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("이미지 파일만 올릴 수 있습니다.");
+      return;
+    }
+    setError(null);
+    if (cropAspect && CROPPABLE.test(file.type)) {
+      setCropping(file);
+      return;
+    }
+    void upload(file, file.name);
   }
 
   async function remove() {
@@ -123,7 +153,7 @@ export function ImageUploader({
           onDrop={(event) => {
             event.preventDefault();
             setDragging(false);
-            void handleFile(event.dataTransfer.files[0]);
+            handleFile(event.dataTransfer.files[0]);
           }}
           disabled={busy}
           className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed px-4 py-7 text-center transition-colors ${
@@ -152,13 +182,28 @@ export function ImageUploader({
         accept="image/*"
         className="hidden"
         onChange={(event) => {
-          void handleFile(event.target.files?.[0]);
+          handleFile(event.target.files?.[0]);
           event.target.value = "";
         }}
       />
 
       {error && <p className="text-2xs text-danger">{error}</p>}
       {hint && <p className="text-2xs text-fg-subtle">{hint}</p>}
+
+      {cropping && cropAspect && (
+        <PhotoCropper
+          file={cropping}
+          aspect={cropAspect}
+          circle={circle}
+          outputWidth={maxWidth}
+          onCancel={() => setCropping(null)}
+          onConfirm={(blob) => {
+            const name = cropping.name;
+            setCropping(null);
+            void upload(blob, name);
+          }}
+        />
+      )}
     </div>
   );
 }

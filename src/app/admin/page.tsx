@@ -110,6 +110,7 @@ export default function AdminProfilePage() {
             folder="profile"
             maxWidth={640}
             circle
+            cropAspect={1}
           />
 
           <BilingualField
@@ -216,6 +217,7 @@ export default function AdminProfilePage() {
             onChange={({ url }) => set("og_image_url", url)}
             folder="profile"
             maxWidth={1200}
+            cropAspect={1200 / 630}
           />
         </section>
 
