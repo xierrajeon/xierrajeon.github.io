@@ -1,11 +1,47 @@
 "use client";
 
-import { MapPin, Printer, User } from "lucide-react";
+import { Globe, Mail, MapPin, NotebookPen, Phone, Printer, User } from "lucide-react";
 import { useLang } from "@/components/providers/AppProviders";
+import {
+  GithubIcon,
+  LinkedinIcon,
+  type IconComponent,
+} from "@/components/ui/BrandIcons";
 import { Markdown } from "@/components/ui/Markdown";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { tr } from "@/lib/i18n";
+import { safeExternalUrl } from "@/lib/url";
 import type { Profile } from "@/lib/types";
+
+/** Order matches the SiteFooter so both surfaces read the same way. */
+const CONTACT_LINKS: {
+  key: keyof Profile;
+  label: string;
+  Icon: IconComponent;
+  /** Turns the raw column value into an anchor href. */
+  href: (value: string) => string | null;
+}[] = [
+  {
+    key: "email",
+    label: "Email",
+    Icon: Mail,
+    href: (value) => (value.trim() ? `mailto:${value.trim()}` : null),
+  },
+  {
+    key: "phone",
+    label: "Phone",
+    Icon: Phone,
+    // `tel:` accepts a URI, so strip spaces and dashes but keep the leading `+`.
+    href: (value) => {
+      const cleaned = value.replace(/[^\d+]/g, "");
+      return cleaned ? `tel:${cleaned}` : null;
+    },
+  },
+  { key: "github_url", label: "GitHub", Icon: GithubIcon, href: safeExternalUrl },
+  { key: "linkedin_url", label: "LinkedIn", Icon: LinkedinIcon, href: safeExternalUrl },
+  { key: "blog_url", label: "Blog", Icon: NotebookPen, href: safeExternalUrl },
+  { key: "website_url", label: "Website", Icon: Globe, href: safeExternalUrl },
+];
 
 export function ProfileCard({
   profile,
@@ -80,6 +116,8 @@ export function ProfileCard({
             </p>
           )}
 
+          <ContactLinks profile={profile} />
+
           {bio && <Markdown className="rich-text mt-3">{bio}</Markdown>}
         </div>
 
@@ -95,5 +133,39 @@ export function ProfileCard({
         )}
       </div>
     </section>
+  );
+}
+
+function ContactLinks({ profile }: { profile: Profile }) {
+  const links = CONTACT_LINKS.flatMap(({ key, label, Icon, href }) => {
+    const raw = profile[key] as string | null | undefined;
+    if (!raw) return [];
+    const resolved = href(raw);
+    return resolved ? [{ key, label, Icon, href: resolved }] : [];
+  });
+  if (links.length === 0) return null;
+
+  return (
+    <ul className="mt-3 flex flex-wrap items-center justify-center gap-1 sm:justify-start">
+      {links.map(({ key, label, Icon, href }) => {
+        // `mailto:` and `tel:` open handlers on the same tab — external URLs
+        // open in a new one so a portfolio visit is not lost on click.
+        const external = href.startsWith("http");
+        return (
+          <li key={key}>
+            <a
+              href={href}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noopener noreferrer me" : undefined}
+              aria-label={label}
+              title={label}
+              className="btn btn-ghost btn-icon btn-sm"
+            >
+              <Icon className="size-4" aria-hidden="true" />
+            </a>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

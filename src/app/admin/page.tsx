@@ -175,6 +175,13 @@ export default function AdminProfilePage() {
               onChange={(v) => set("email", v || null)}
               hint="입력하면 헤더 메일 버튼과 하단 CTA가 나타납니다."
             />
+            <TextInput
+              label="전화번호"
+              type="tel"
+              placeholder="+82-10-0000-0000"
+              value={draft.phone ?? ""}
+              onChange={(v) => set("phone", v || null)}
+            />
             <UrlInput
               label="GitHub"
               placeholder="https://github.com/xierrajeon"
