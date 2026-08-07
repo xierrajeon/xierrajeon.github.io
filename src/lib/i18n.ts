@@ -54,7 +54,7 @@ export const dict = {
     "resume.print": "PDF로 저장",
     "resume.downloadPdf": "이력서 PDF",
     "profile.status": "새로운 기회를 찾는 중",
-    "profile.contactMe": "연락하기",
+    "profile.contactMe": "Contact",
     "profile.downloadResume": "이력서 다운로드",
     "profile.phone": "Phone",
     "profile.website": "Website",

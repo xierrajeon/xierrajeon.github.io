@@ -690,8 +690,8 @@
      server-side counter; the count number sits under the profile card. */
   .heart-button {
     position: absolute;
-    right: 0.5rem;
-    bottom: 0.75rem;
+    right: 1.5rem;
+    bottom: 1.75rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;

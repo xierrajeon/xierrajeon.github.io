@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Globe, Heart, Phone, Sparkles, User } from "lucide-react";
+import { Download, Globe, Heart, Mail, Phone, Sparkles, User } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import { useLang } from "@/components/providers/AppProviders";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/BrandIcons";
@@ -54,7 +54,7 @@ export function ProfileCard({
     <section className="card p-5 sm:p-8">
       <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-10">
         {/* Left column — photo + status + primary actions */}
-        <div className="flex w-full flex-col items-center gap-5 lg:w-auto lg:shrink-0">
+        <div className="flex w-full flex-col items-center gap-4 lg:w-auto lg:shrink-0">
           <PhotoFrame
             src={profile.photo_url}
             alt={displayName || "profile"}
@@ -65,7 +65,7 @@ export function ProfileCard({
           />
 
           {status && (
-            <div className="flex flex-col items-center gap-1.5 text-center">
+            <div className="mt-2 flex flex-col items-center gap-1.5 text-center">
               <span className="status-pill-lg">
                 {profile.status_active && (
                   <span className="status-dot" aria-hidden="true" />
@@ -75,10 +75,12 @@ export function ProfileCard({
             </div>
           )}
 
-          <div className="flex w-full flex-col gap-2 sm:w-64">
+          {/* mt-4 keeps the buttons clear of the heart badge, which extends
+              beyond the photo circle's visible bottom edge. */}
+          <div className="mt-4 flex w-full flex-col gap-2 sm:w-64">
             {email && (
               <a href={`mailto:${email}`} className="btn btn-primary btn-lg">
-                <Phone className="size-4" aria-hidden="true" />
+                <Mail className="size-4" aria-hidden="true" />
                 {translate(lang, "profile.contactMe")}
               </a>
             )}
