@@ -134,31 +134,37 @@ function ContactRows({
 
   if (!location && !email && !phone && socials.length === 0) return null;
 
+  const hasContact = email || (phone && telHref);
+
   return (
-    <div className="mt-2 flex flex-col items-center gap-1 sm:items-start">
+    <div className="mt-3 flex flex-col items-center gap-2 sm:items-start">
+      {hasContact && (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-fg-subtle sm:justify-start">
+          {email && (
+            <a
+              href={`mailto:${email}`}
+              className="flex items-center gap-1 hover:text-accent"
+            >
+              <Mail className="size-3.5" aria-hidden="true" />
+              {email}
+            </a>
+          )}
+          {phone && telHref && (
+            <a
+              href={telHref}
+              className="flex items-center gap-1 hover:text-accent"
+            >
+              <Phone className="size-3.5" aria-hidden="true" />
+              {phone}
+            </a>
+          )}
+        </div>
+      )}
       {location && (
         <p className="flex items-center gap-1 text-xs text-fg-subtle">
           <MapPin className="size-3.5" aria-hidden="true" />
           {location}
         </p>
-      )}
-      {email && (
-        <a
-          href={`mailto:${email}`}
-          className="flex items-center gap-1 text-xs text-fg-subtle hover:text-accent"
-        >
-          <Mail className="size-3.5" aria-hidden="true" />
-          {email}
-        </a>
-      )}
-      {phone && telHref && (
-        <a
-          href={telHref}
-          className="flex items-center gap-1 text-xs text-fg-subtle hover:text-accent"
-        >
-          <Phone className="size-3.5" aria-hidden="true" />
-          {phone}
-        </a>
       )}
       {socials.length > 0 && (
         <ul className="mt-1 flex flex-wrap items-center gap-1">
