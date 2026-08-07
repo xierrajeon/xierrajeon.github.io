@@ -564,9 +564,17 @@
       height: 16rem;
     }
   }
+  /* Sized with explicit width/height rather than `inset`.
+     An <img> is a replaced element: with `width: auto` it resolves to its
+     INTRINSIC width (the 288px attribute), not to the width implied by the
+     left/right insets — so `inset: 1.25rem` alone let the photo overflow the
+     frame and pushed the heart badge deep inside the circle. */
   .profile-photo-frame > .profile-photo-image {
     position: absolute;
-    inset: 1.25rem;
+    top: 1.25rem;
+    left: 1.25rem;
+    width: calc(100% - 2.5rem);
+    height: calc(100% - 2.5rem);
     border-radius: 9999px;
     object-fit: cover;
     background-color: var(--accent-soft);
