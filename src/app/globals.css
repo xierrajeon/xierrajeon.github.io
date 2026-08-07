@@ -542,13 +542,23 @@
   /* --- profile card ----------------------------------------------------- */
   /* The framed photo with orbital rings, sparkles and a heart badge. Made
      of layered SVGs positioned around the image; no raster assets. */
+  /* Sizes track the layout: when the card is a single vertical column
+     (below lg) the photo would otherwise dominate the viewport, so it stays
+     small; the full 16rem only appears in the two-column desktop layout,
+     where the photo has a right-column of text next to it for balance. */
   .profile-photo-frame {
     position: relative;
-    width: 14rem;
-    height: 14rem;
+    width: 11rem;
+    height: 11rem;
     flex-shrink: 0;
   }
   @media (min-width: 640px) {
+    .profile-photo-frame {
+      width: 12.5rem;
+      height: 12.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
     .profile-photo-frame {
       width: 16rem;
       height: 16rem;
