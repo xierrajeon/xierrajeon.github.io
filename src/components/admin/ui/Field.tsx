@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, type ReactNode } from "react";
+import { isBrokenUrl, normalizeUrl } from "@/lib/url";
 
 /**
  * Form primitives shared by every admin screen. Every content column in the
@@ -31,12 +32,15 @@ export function Field({
 export function TextInput({
   label,
   hint,
+  error,
   value,
   onChange,
   ...rest
 }: {
   label?: string;
   hint?: string;
+  /** Replaces the hint and marks the field invalid to assistive tech. */
+  error?: string;
   value: string;
   onChange: (value: string) => void;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
@@ -53,9 +57,14 @@ export function TextInput({
         className="input"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        aria-invalid={error ? true : undefined}
         {...rest}
       />
-      {hint && <p className="text-2xs text-fg-subtle">{hint}</p>}
+      {error ? (
+        <p className="text-2xs text-danger">{error}</p>
+      ) : (
+        hint && <p className="text-2xs text-fg-subtle">{hint}</p>
+      )}
     </div>
   );
 }
@@ -156,6 +165,50 @@ export function BilingualField({
         {hint ?? "한쪽만 채우면 다른 언어에서도 채운 쪽이 표시됩니다."}
       </p>
     </div>
+  );
+}
+
+/**
+ * URL field that repairs itself on blur and says so when it cannot.
+ *
+ * Pasting a markdown link into one of these produced a stored value of
+ * `https://site](https://site`, which the browser refused to navigate to — the
+ * live-demo button silently landed on `about:blank`. Cleaning the value where
+ * it is entered stops that at the source; `safeExternalUrl` on the public side
+ * is the second line of defence.
+ */
+export function UrlInput({
+  label,
+  hint,
+  value,
+  onChange,
+  placeholder = "https://",
+}: {
+  label?: string;
+  hint?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <TextInput
+      label={label}
+      type="url"
+      inputMode="url"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      onBlur={() => {
+        const cleaned = normalizeUrl(value);
+        if (cleaned !== value) onChange(cleaned);
+      }}
+      hint={hint}
+      error={
+        isBrokenUrl(value)
+          ? "이 주소로는 이동할 수 없습니다. https:// 로 시작하는지 확인하세요."
+          : undefined
+      }
+    />
   );
 }
 

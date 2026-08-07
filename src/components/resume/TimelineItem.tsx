@@ -12,6 +12,7 @@ import {
   tr,
 } from "@/lib/i18n";
 import type { DictKey } from "@/lib/i18n";
+import { safeExternalUrl } from "@/lib/url";
 import type { EnrollmentStatus, TimelineEntry } from "@/lib/types";
 
 /** Only the two in-progress states earn a coloured badge. */
@@ -128,9 +129,10 @@ function TitleLine({ entry }: { entry: TimelineEntry }) {
   const title = tr(entry.title_ko, entry.title_en, lang);
   const subtitle = tr(entry.subtitle_ko, entry.subtitle_en, lang);
 
-  const titleNode = entry.url ? (
+  const href = safeExternalUrl(entry.url);
+  const titleNode = href ? (
     <a
-      href={entry.url}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="group inline-flex items-center gap-1 font-bold hover:text-accent"
@@ -211,9 +213,9 @@ export function AwardItem({ entry }: { entry: TimelineEntry }) {
       <article className="card h-full p-4">
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-[0.9375rem] font-bold leading-snug">
-            {entry.url ? (
+            {safeExternalUrl(entry.url) ? (
               <a
-                href={entry.url}
+                href={safeExternalUrl(entry.url) as string}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-accent"

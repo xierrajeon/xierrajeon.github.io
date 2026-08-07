@@ -18,6 +18,7 @@ import { BlockRenderer } from "./BlockRenderer";
 import { FloatingToc } from "./FloatingToc";
 import { formatDateRange, tr } from "@/lib/i18n";
 import { routes } from "@/lib/site";
+import { safeExternalUrl } from "@/lib/url";
 import type { ProjectWithBlocks } from "@/lib/types";
 
 function MetaRow({
@@ -70,6 +71,10 @@ export function ProjectDetail({
     project.is_ongoing,
     lang,
   );
+  // A malformed address would render a button that navigates nowhere, which is
+  // worse than no button at all.
+  const repoUrl = safeExternalUrl(project.repo_url);
+  const demoUrl = safeExternalUrl(project.demo_url);
 
   return (
     <article className={embedded ? "" : "container-page"}>
@@ -113,7 +118,7 @@ export function ProjectDetail({
       )}
 
       {(period || role || project.team_size || project.tags.length > 0 ||
-        project.repo_url || project.demo_url) && (
+        repoUrl || demoUrl) && (
         <section className="card mt-5 flex flex-col gap-3 p-4 sm:p-5">
           <div className="grid gap-3 sm:grid-cols-2">
             {period && (
@@ -144,11 +149,11 @@ export function ProjectDetail({
             </div>
           )}
 
-          {(project.repo_url || project.demo_url) && (
+          {(repoUrl || demoUrl) && (
             <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-              {project.repo_url && (
+              {repoUrl && (
                 <a
-                  href={project.repo_url}
+                  href={repoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-secondary btn-sm"
@@ -158,9 +163,9 @@ export function ProjectDetail({
                   <ArrowUpRight className="size-3" aria-hidden="true" />
                 </a>
               )}
-              {project.demo_url && (
+              {demoUrl && (
                 <a
-                  href={project.demo_url}
+                  href={demoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary btn-sm"

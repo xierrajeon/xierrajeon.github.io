@@ -8,6 +8,7 @@ import { TagList } from "@/components/ui/TagList";
 import { CodeBlockView } from "./CodeBlockView";
 import { VideoEmbed } from "./VideoEmbed";
 import { tr, translate } from "@/lib/i18n";
+import { safeExternalUrl } from "@/lib/url";
 import { detectProvider } from "@/lib/video";
 import type { Lang, ProjectBlock } from "@/lib/types";
 
@@ -200,9 +201,9 @@ function BlockBody({ block, lang }: { block: ProjectBlock; lang: Lang }) {
             {body && (
               <Markdown className="rich-text mt-2 text-sm">{body}</Markdown>
             )}
-            {repo_url && (
+            {safeExternalUrl(repo_url) && (
               <a
-                href={repo_url}
+                href={safeExternalUrl(repo_url) as string}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary btn-sm mt-3"
@@ -238,9 +239,9 @@ function BlockBody({ block, lang }: { block: ProjectBlock; lang: Lang }) {
     }
 
     case "link": {
-      if (!block.data.url) return null;
-      const label =
-        tr(block.data.label_ko, block.data.label_en, lang) || block.data.url;
+      const href = safeExternalUrl(block.data.url);
+      if (!href) return null;
+      const label = tr(block.data.label_ko, block.data.label_en, lang) || href;
       const description = tr(
         block.data.description_ko,
         block.data.description_en,
@@ -248,7 +249,7 @@ function BlockBody({ block, lang }: { block: ProjectBlock; lang: Lang }) {
       );
       return (
         <a
-          href={block.data.url}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           className="card card-interactive flex items-center gap-3 p-4"

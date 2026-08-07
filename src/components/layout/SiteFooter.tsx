@@ -8,6 +8,7 @@ import {
   type IconComponent,
 } from "@/components/ui/BrandIcons";
 import { tr } from "@/lib/i18n";
+import { safeExternalUrl } from "@/lib/url";
 import type { Profile } from "@/lib/types";
 
 const SOCIAL: {
@@ -31,7 +32,10 @@ export function SiteFooter({
 }) {
   const { lang, t } = useLang();
   const name = tr(profile.name_ko, profile.name_en, lang);
-  const links = SOCIAL.filter((s) => profile[s.key]);
+  const links = SOCIAL.map((s) => ({
+    ...s,
+    href: safeExternalUrl(profile[s.key] as string | null),
+  })).filter((s) => s.href);
 
   return (
     <footer className="mt-16 sm:mt-20">
@@ -57,10 +61,10 @@ export function SiteFooter({
         <div className="flex flex-col items-center gap-4 py-8 sm:flex-row sm:justify-between">
           {links.length > 0 && (
             <ul className="flex items-center gap-1">
-              {links.map(({ key, label, Icon }) => (
+              {links.map(({ key, label, Icon, href }) => (
                 <li key={key}>
                   <a
-                    href={profile[key] as string}
+                    href={href as string}
                     target="_blank"
                     rel="noopener noreferrer me"
                     className="btn btn-ghost btn-icon btn-sm"

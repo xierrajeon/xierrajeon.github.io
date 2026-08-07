@@ -8,6 +8,7 @@ import {
   BilingualField,
   TextInput,
   Toggle,
+  UrlInput,
 } from "../ui/Field";
 import { ImageUploader } from "../ui/ImageUploader";
 import { SaveBar } from "../ui/SaveBar";
@@ -359,15 +360,13 @@ export function ProjectEditor() {
                 value={project.team_size?.toString() ?? ""}
                 onChange={(v) => set("team_size", v ? Number(v) : null)}
               />
-              <TextInput
+              <UrlInput
                 label="GitHub 저장소"
-                type="url"
                 value={project.repo_url ?? ""}
                 onChange={(v) => set("repo_url", v || null)}
               />
-              <TextInput
+              <UrlInput
                 label="라이브 데모"
-                type="url"
                 value={project.demo_url ?? ""}
                 onChange={(v) => set("demo_url", v || null)}
               />

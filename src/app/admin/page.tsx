@@ -6,6 +6,7 @@ import {
   BilingualField,
   TextInput,
   Toggle,
+  UrlInput,
 } from "@/components/admin/ui/Field";
 import { ImageUploader } from "@/components/admin/ui/ImageUploader";
 import { SaveBar } from "@/components/admin/ui/SaveBar";
@@ -166,28 +167,24 @@ export default function AdminProfilePage() {
               onChange={(v) => set("email", v || null)}
               hint="입력하면 헤더 메일 버튼과 하단 CTA가 나타납니다."
             />
-            <TextInput
+            <UrlInput
               label="GitHub"
-              type="url"
               placeholder="https://github.com/xierrajeon"
               value={draft.github_url ?? ""}
               onChange={(v) => set("github_url", v || null)}
             />
-            <TextInput
+            <UrlInput
               label="LinkedIn"
-              type="url"
               value={draft.linkedin_url ?? ""}
               onChange={(v) => set("linkedin_url", v || null)}
             />
-            <TextInput
+            <UrlInput
               label="블로그"
-              type="url"
               value={draft.blog_url ?? ""}
               onChange={(v) => set("blog_url", v || null)}
             />
-            <TextInput
+            <UrlInput
               label="웹사이트"
-              type="url"
               value={draft.website_url ?? ""}
               onChange={(v) => set("website_url", v || null)}
             />

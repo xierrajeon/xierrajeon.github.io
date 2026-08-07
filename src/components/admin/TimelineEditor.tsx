@@ -14,6 +14,7 @@ import {
   Select,
   TextInput,
   Toggle,
+  UrlInput,
 } from "./ui/Field";
 import { SaveBar } from "./ui/SaveBar";
 import { TagInput } from "./ui/TagInput";
@@ -434,10 +435,8 @@ function EntryCard({
           />
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <TextInput
+            <UrlInput
               label="관련 링크"
-              type="url"
-              placeholder="https://"
               value={entry.url ?? ""}
               onChange={(v) => set("url", v || null)}
             />

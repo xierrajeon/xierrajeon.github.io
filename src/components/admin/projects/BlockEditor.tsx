@@ -18,7 +18,14 @@ import {
   Trash2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { BilingualField, Select, TextArea, TextInput, Toggle } from "../ui/Field";
+import {
+  BilingualField,
+  Select,
+  TextArea,
+  TextInput,
+  Toggle,
+  UrlInput,
+} from "../ui/Field";
 import { ImageUploader } from "../ui/ImageUploader";
 import { TagInput } from "../ui/TagInput";
 import { VideoField } from "../ui/VideoField";
@@ -463,9 +470,8 @@ function BlockForm({ block, patch }: { block: ProjectBlock; patch: Patch }) {
               onChange={(url) => patch({ media_url: url || null })}
             />
           )}
-          <TextInput
+          <UrlInput
             label="이 기능의 코드 링크"
-            type="url"
             placeholder="https://github.com/... (파일이나 라인까지 지정 가능)"
             value={block.data.repo_url ?? ""}
             onChange={(value) => patch({ repo_url: value || null })}
@@ -637,9 +643,8 @@ function BlockForm({ block, patch }: { block: ProjectBlock; patch: Patch }) {
     case "link":
       return (
         <div className="flex flex-col gap-3">
-          <TextInput
+          <UrlInput
             label="URL"
-            type="url"
             value={block.data.url}
             onChange={(url) => patch({ url })}
           />
