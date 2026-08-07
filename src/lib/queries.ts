@@ -1,3 +1,4 @@
+import { normalizeTimelineEntries } from "./normalize";
 import { getSupabaseRead } from "./supabase";
 import {
   seedBlocks,
@@ -99,7 +100,7 @@ export async function getTimelineEntries(allowSeed = true): Promise<TimelineEntr
       .order("sort_order", { ascending: true })
       .order("start_date", { ascending: false, nullsFirst: false });
     if (error) throw error;
-    if (data?.length) return data as TimelineEntry[];
+    if (data?.length) return normalizeTimelineEntries(data as TimelineEntry[]);
     return allowSeed ? seedTimeline : [];
   } catch (error) {
     warn("getTimelineEntries", error);

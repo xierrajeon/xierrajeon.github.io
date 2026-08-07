@@ -34,6 +34,19 @@ export const dict = {
     "resume.award": "수상 이력",
     "resume.activity": "활동 이력",
     "resume.skills": "기술 스택",
+    "resume.gpa": "학점",
+
+    "major.primary": "주전공",
+    "major.double": "복수전공",
+    "major.dual": "이중전공",
+    "major.minor": "부전공",
+
+    "enrollment.enrolled": "재학중",
+    "enrollment.on_leave": "휴학중",
+    "enrollment.graduated": "졸업",
+    "enrollment.expected": "졸업예정",
+    "enrollment.withdrawn": "중퇴",
+
     "resume.contact": "연락처",
     "resume.print": "PDF로 저장",
     "resume.downloadPdf": "이력서 PDF",
@@ -94,6 +107,19 @@ export const dict = {
     "resume.award": "Awards",
     "resume.activity": "Activities",
     "resume.skills": "Skills",
+    "resume.gpa": "GPA",
+
+    "major.primary": "Major",
+    "major.double": "Double Major",
+    "major.dual": "Dual Major",
+    "major.minor": "Minor",
+
+    "enrollment.enrolled": "Enrolled",
+    "enrollment.on_leave": "On leave",
+    "enrollment.graduated": "Graduated",
+    "enrollment.expected": "Expected graduation",
+    "enrollment.withdrawn": "Withdrawn",
+
     "resume.contact": "Contact",
     "resume.print": "Save as PDF",
     "resume.downloadPdf": "Resume PDF",
@@ -248,4 +274,23 @@ export function formatDuration(
 function currentYearMonth(): { y: number; m: number } {
   const d = new Date();
   return { y: d.getFullYear(), m: d.getMonth() + 1 };
+}
+
+/**
+ * "3.80 / 4.5". The score keeps two decimals because a resume distinguishes
+ * 3.80 from 3.8x, while the scale is written as typed (4.5, not 4.50).
+ */
+export function formatGpa(
+  gpa: number | string | null | undefined,
+  scale: number | string | null | undefined,
+): string {
+  // Postgres `numeric` can arrive as a string, so both inputs are coerced.
+  const score = Number(gpa);
+  if (gpa === null || gpa === undefined || gpa === "" || Number.isNaN(score)) {
+    return "";
+  }
+  const max = Number(scale);
+  if (!max || Number.isNaN(max)) return score.toFixed(2);
+  // `String(4.5)` → "4.5" and `String(4)` → "4"; a scale never needs padding.
+  return `${score.toFixed(2)} / ${max}`;
 }

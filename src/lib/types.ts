@@ -15,6 +15,30 @@ export type TimelineCategory = (typeof TIMELINE_CATEGORIES)[number];
 
 export type DatePrecision = "day" | "month" | "year";
 
+/**
+ * Korean degree programmes distinguish these, and the distinction matters on a
+ * resume — a 복수전공 is a second full degree while a 부전공 is not.
+ */
+export const MAJOR_KINDS = ["primary", "double", "dual", "minor"] as const;
+
+export type MajorKind = (typeof MAJOR_KINDS)[number];
+
+export interface Major {
+  name_ko: string;
+  name_en: string;
+  kind: MajorKind;
+}
+
+export const ENROLLMENT_STATUSES = [
+  "enrolled",
+  "on_leave",
+  "graduated",
+  "expected",
+  "withdrawn",
+] as const;
+
+export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
+
 export interface Profile {
   id: number;
   name_ko: string;
@@ -61,6 +85,14 @@ export interface TimelineEntry {
   tags: string[];
   sort_order: number;
   is_published: boolean;
+
+  /* --- education only ---------------------------------------------------- */
+  /** One school, potentially several majors of different kinds. */
+  majors: Major[];
+  gpa: number | null;
+  /** The maximum the GPA is out of — 4.5, 4.3, 4.0 or 100. */
+  gpa_scale: number | null;
+  enrollment_status: EnrollmentStatus | null;
 }
 
 export interface Project {

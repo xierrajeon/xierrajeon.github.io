@@ -4,8 +4,82 @@ import { ExternalLink } from "lucide-react";
 import { useLang } from "@/components/providers/AppProviders";
 import { Markdown } from "@/components/ui/Markdown";
 import { HighlightList } from "@/components/ui/TagList";
-import { formatDate, formatDateRange, formatDuration, tr } from "@/lib/i18n";
-import type { TimelineEntry } from "@/lib/types";
+import {
+  formatDate,
+  formatDateRange,
+  formatDuration,
+  formatGpa,
+  tr,
+} from "@/lib/i18n";
+import type { DictKey } from "@/lib/i18n";
+import type { EnrollmentStatus, TimelineEntry } from "@/lib/types";
+
+/** Only the two in-progress states earn a coloured badge. */
+const ENROLLMENT_TONE: Record<EnrollmentStatus, string> = {
+  enrolled: "bg-success-soft text-success",
+  on_leave: "bg-warn-soft text-warn",
+  expected: "bg-accent-soft text-accent",
+  graduated: "bg-surface-sunken text-fg-muted",
+  withdrawn: "bg-surface-sunken text-fg-muted",
+};
+
+/**
+ * Majors, degree status and GPA — the three things a Korean resume reader looks
+ * for on an education row, and nothing else renders them.
+ */
+function EducationDetails({ entry }: { entry: TimelineEntry }) {
+  const { lang, t } = useLang();
+
+  const majors = entry.majors ?? [];
+  const gpa = formatGpa(entry.gpa, entry.gpa_scale);
+  const status = entry.enrollment_status;
+
+  if (majors.length === 0 && !gpa && !status) return null;
+
+  return (
+    <div className="mt-2 flex flex-col gap-2">
+      {majors.length > 0 && (
+        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          {majors.map((major, index) => {
+            const name = tr(major.name_ko, major.name_en, lang);
+            if (!name) return null;
+            return (
+              <li
+                key={`${name}-${index}`}
+                className="flex items-baseline gap-1.5 text-sm"
+              >
+                <span className="tag shrink-0 text-2xs">
+                  {t(`major.${major.kind}` as DictKey)}
+                </span>
+                <span className="font-medium">{name}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {(gpa || status) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {status && (
+            <span
+              className={`rounded-md px-1.5 py-0.5 text-2xs font-semibold ${ENROLLMENT_TONE[status]}`}
+            >
+              {t(`enrollment.${status}` as DictKey)}
+            </span>
+          )}
+          {gpa && (
+            <span className="text-xs text-fg-muted">
+              {t("resume.gpa")}{" "}
+              <strong className="font-semibold tabular-nums text-fg">
+                {gpa}
+              </strong>
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /**
  * Builds the right-hand date pill.
@@ -111,6 +185,8 @@ export function TimelineItem({ entry }: { entry: TimelineEntry }) {
             <p className="date-pill shrink-0 self-start sm:ml-auto">{dateLabel}</p>
           )}
         </div>
+
+        {entry.category === "education" && <EducationDetails entry={entry} />}
 
         {description && (
           <Markdown className="rich-text mt-2.5 text-sm">{description}</Markdown>

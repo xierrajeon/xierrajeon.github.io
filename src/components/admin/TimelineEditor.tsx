@@ -20,7 +20,19 @@ import { TagInput } from "./ui/TagInput";
 import { CATEGORY_CONFIG, TimelineSection } from "@/components/resume/TimelineSection";
 import { getSupabaseBrowser } from "@/lib/supabase";
 import { useSaver } from "@/lib/admin/useSaver";
-import { TIMELINE_CATEGORIES, type DatePrecision, type TimelineCategory, type TimelineEntry } from "@/lib/types";
+import { dict, formatGpa } from "@/lib/i18n";
+import { normalizeTimelineEntries } from "@/lib/normalize";
+import {
+  ENROLLMENT_STATUSES,
+  MAJOR_KINDS,
+  TIMELINE_CATEGORIES,
+  type DatePrecision,
+  type EnrollmentStatus,
+  type Major,
+  type MajorKind,
+  type TimelineCategory,
+  type TimelineEntry,
+} from "@/lib/types";
 
 /** Rows created in the browser carry a temporary id until they are inserted. */
 const TEMP_PREFIX = "tmp-";
@@ -46,6 +58,10 @@ function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
     tags: [],
     sort_order: index,
     is_published: true,
+    majors: [],
+    gpa: null,
+    gpa_scale: category === "education" ? 4.5 : null,
+    enrollment_status: category === "education" ? "graduated" : null,
   };
 }
 
@@ -54,6 +70,169 @@ const PRECISION_OPTIONS: { value: DatePrecision; label: string }[] = [
   { value: "month", label: "월까지 (2024.03)" },
   { value: "day", label: "일까지 (2024.03.15)" },
 ];
+
+const MAJOR_KIND_OPTIONS: { value: MajorKind; label: string }[] = MAJOR_KINDS.map(
+  (kind) => ({ value: kind, label: dict.ko[`major.${kind}`] }),
+);
+
+const ENROLLMENT_OPTIONS: { value: EnrollmentStatus; label: string }[] =
+  ENROLLMENT_STATUSES.map((status) => ({
+    value: status,
+    label: dict.ko[`enrollment.${status}`],
+  }));
+
+/** Common Korean grading scales, offered as suggestions but not enforced. */
+const GPA_SCALES = [4.5, 4.3, 4.0, 100];
+
+/**
+ * Majors for one school.
+ *
+ * A first major defaults to 주전공 and every later one to 복수전공, because that
+ * is the shape of the data almost every time — one primary degree plus
+ * additions. Nothing is enforced, so an unusual case can still be described.
+ */
+function MajorsEditor({
+  majors,
+  onChange,
+}: {
+  majors: Major[];
+  onChange: (majors: Major[]) => void;
+}) {
+  function update(index: number, patch: Partial<Major>) {
+    onChange(majors.map((m, i) => (i === index ? { ...m, ...patch } : m)));
+  }
+
+  return (
+    <div className="field">
+      <span className="label">전공</span>
+
+      {majors.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {majors.map((major, index) => (
+            <li
+              key={index}
+              className="grid items-end gap-2 rounded-lg border border-border p-2 sm:grid-cols-[8.5rem_1fr_1fr_auto]"
+            >
+              <Select
+                label={index === 0 ? "구분" : undefined}
+                value={major.kind}
+                options={MAJOR_KIND_OPTIONS}
+                onChange={(kind) => update(index, { kind })}
+              />
+              <TextInput
+                label={index === 0 ? "학과 (한국어)" : undefined}
+                placeholder="컴퓨터공학과"
+                value={major.name_ko}
+                onChange={(name_ko) => update(index, { name_ko })}
+              />
+              <TextInput
+                label={index === 0 ? "학과 (English)" : undefined}
+                placeholder="Computer Science"
+                value={major.name_en}
+                onChange={(name_en) => update(index, { name_en })}
+              />
+              <button
+                type="button"
+                onClick={() => onChange(majors.filter((_, i) => i !== index))}
+                className="btn btn-ghost btn-icon btn-sm text-danger"
+                aria-label={`전공 ${index + 1} 삭제`}
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <button
+        type="button"
+        onClick={() =>
+          onChange([
+            ...majors,
+            {
+              name_ko: "",
+              name_en: "",
+              kind: majors.length === 0 ? "primary" : "double",
+            },
+          ])
+        }
+        className="btn btn-secondary btn-sm self-start border-dashed"
+      >
+        <Plus className="size-4" aria-hidden="true" />
+        전공 추가
+      </button>
+
+      <p className="text-2xs text-fg-subtle">
+        복수전공·이중전공·부전공이 있으면 각각 한 줄씩 추가하세요.
+      </p>
+    </div>
+  );
+}
+
+/** Score plus the scale it is out of; one without the other means nothing. */
+function GpaFields({
+  gpa,
+  gpaScale,
+  onChange,
+}: {
+  gpa: number | null;
+  gpaScale: number | null;
+  onChange: (patch: { gpa?: number | null; gpa_scale?: number | null }) => void;
+}) {
+  const overMax = gpa !== null && gpaScale !== null && gpa > gpaScale;
+
+  return (
+    <div className="field">
+      <span className="label">학점</span>
+      <div className="flex items-center gap-2">
+        <input
+          className="input"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="3.80"
+          aria-label="취득 학점"
+          value={gpa ?? ""}
+          onChange={(event) =>
+            onChange({ gpa: event.target.value === "" ? null : Number(event.target.value) })
+          }
+        />
+        <span className="shrink-0 text-sm text-fg-subtle">/</span>
+        <input
+          className="input"
+          type="number"
+          step="0.1"
+          min="0"
+          list="gpa-scales"
+          placeholder="4.5"
+          aria-label="만점 기준"
+          value={gpaScale ?? ""}
+          onChange={(event) =>
+            onChange({
+              gpa_scale: event.target.value === "" ? null : Number(event.target.value),
+            })
+          }
+        />
+        <datalist id="gpa-scales">
+          {GPA_SCALES.map((scale) => (
+            <option key={scale} value={scale} />
+          ))}
+        </datalist>
+      </div>
+      {overMax ? (
+        <p className="text-2xs text-danger">
+          취득 학점이 만점보다 큽니다. 만점 기준을 확인하세요.
+        </p>
+      ) : (
+        <p className="text-2xs text-fg-subtle">
+          {gpa !== null
+            ? `이렇게 표시됩니다 — ${formatGpa(gpa, gpaScale)}`
+            : "비워두면 학점이 표시되지 않습니다."}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function EntryCard({
   entry,
@@ -158,7 +337,7 @@ function EntryCard({
               entry.category === "award"
                 ? "주최 기관"
                 : entry.category === "education"
-                  ? "전공 · 학위"
+                  ? "학위"
                   : entry.category === "career"
                     ? "직책"
                     : "역할"
@@ -167,7 +346,31 @@ function EntryCard({
             en={entry.subtitle_en}
             onChangeKo={(v) => set("subtitle_ko", v)}
             onChangeEn={(v) => set("subtitle_en", v)}
+            placeholderKo={entry.category === "education" ? "학사" : undefined}
+            placeholderEn={entry.category === "education" ? "B.S." : undefined}
           />
+
+          {entry.category === "education" && (
+            <>
+              <MajorsEditor
+                majors={entry.majors ?? []}
+                onChange={(majors) => set("majors", majors)}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <GpaFields
+                  gpa={entry.gpa}
+                  gpaScale={entry.gpa_scale}
+                  onChange={(patch) => onChange({ ...entry, ...patch })}
+                />
+                <Select
+                  label="현재 상태"
+                  value={entry.enrollment_status ?? "graduated"}
+                  options={ENROLLMENT_OPTIONS}
+                  onChange={(status) => set("enrollment_status", status)}
+                />
+              </div>
+            </>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-3">
             <TextInput
@@ -272,7 +475,9 @@ export function TimelineEditor() {
       .select("*")
       .order("sort_order", { ascending: true })
       .order("start_date", { ascending: false, nullsFirst: false })
-      .then(({ data }) => setRows((data ?? []) as TimelineEntry[]));
+      .then(({ data }) =>
+        setRows(normalizeTimelineEntries((data ?? []) as TimelineEntry[])),
+      );
   }, []);
 
   const visible = useMemo(
@@ -355,7 +560,7 @@ export function TimelineEditor() {
         .from("timeline_entries")
         .select("*")
         .order("sort_order", { ascending: true });
-      setRows((data ?? []) as TimelineEntry[]);
+      setRows(normalizeTimelineEntries((data ?? []) as TimelineEntry[]));
       setDeleted([]);
     });
 

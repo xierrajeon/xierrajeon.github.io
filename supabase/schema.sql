@@ -119,6 +119,40 @@ create table if not exists public.timeline_entries (
   updated_at     timestamptz not null default now()
 );
 
+-- Education-only fields, added after the first release.
+--
+-- `majors` is jsonb because one school routinely carries several majors of
+-- different kinds (주전공 / 복수전공 / 이중전공 / 부전공). Shape mirrors
+-- `Major` in src/lib/types.ts:
+--   [{ "name_ko": "컴퓨터공학과", "name_en": "Computer Science", "kind": "primary" }]
+alter table public.timeline_entries
+  add column if not exists majors jsonb not null default '[]'::jsonb;
+
+-- GPA is meaningless without its scale: Korean universities use 4.5 or 4.3,
+-- some use 4.0, and a few report out of 100.
+alter table public.timeline_entries
+  add column if not exists gpa numeric(5, 2);
+alter table public.timeline_entries
+  add column if not exists gpa_scale numeric(5, 2);
+
+alter table public.timeline_entries
+  add column if not exists enrollment_status text;
+
+-- Added as a separate statement so re-running the file on a table that already
+-- has the column still installs the constraint.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'timeline_entries_enrollment_status_check'
+  ) then
+    alter table public.timeline_entries
+      add constraint timeline_entries_enrollment_status_check
+      check (enrollment_status is null or enrollment_status in
+        ('enrolled', 'on_leave', 'graduated', 'expected', 'withdrawn'));
+  end if;
+end $$;
+
 create index if not exists timeline_entries_category_idx
   on public.timeline_entries (category, sort_order desc, start_date desc);
 
