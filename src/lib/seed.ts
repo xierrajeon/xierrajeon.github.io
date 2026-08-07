@@ -87,12 +87,16 @@ export const seedTimeline: TimelineEntry[] = [
       {
         name_ko: "포트폴리오 어드민",
         name_en: "Portfolio Admin",
+        note_ko: "정적 사이트에 붙는 사내 CMS 구축",
+        note_en: "Built a CMS that bolts onto a static site",
         slug: "portfolio-admin",
         url: null,
       },
       {
         name_ko: "채팅 이모지 첨부 기능",
         name_en: "Chat Emoji Picker",
+        note_ko: "입력 흐름을 끊지 않는 이모지 피커 설계 · 구현",
+        note_en: "Designed and shipped a picker that never breaks typing flow",
         slug: "chat-emoji-picker",
         url: null,
       },

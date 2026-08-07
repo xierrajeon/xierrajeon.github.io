@@ -39,6 +39,9 @@ export interface Major {
 export interface LinkedProject {
   name_ko: string;
   name_en: string;
+  /** One line on what it was — "홈페이지 만들기 프로젝트". */
+  note_ko: string;
+  note_en: string;
   slug: string | null;
   url: string | null;
 }

@@ -22,6 +22,8 @@ import { CATEGORY_CONFIG, TimelineSection } from "@/components/resume/TimelineSe
 import { getSupabaseBrowser } from "@/lib/supabase";
 import { useSaver } from "@/lib/admin/useSaver";
 import { dict, formatGpa } from "@/lib/i18n";
+import { SITE_URL } from "@/lib/site";
+import { internalProjectSlug } from "@/lib/url";
 import { normalizeTimelineEntries } from "@/lib/normalize";
 import {
   ENROLLMENT_STATUSES,
@@ -208,6 +210,20 @@ function LinkedProjectsEditor({
     onChange(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   }
 
+  /**
+   * Pasting the full address of one of our own project pages is the obvious
+   * thing to do, so it is converted into an internal reference rather than
+   * stored as an external link.
+   */
+  function setUrl(index: number, url: string) {
+    const slug = internalProjectSlug(url, SITE_URL);
+    if (slug && options.some((o) => o.slug === slug)) {
+      update(index, { slug, url: null });
+    } else {
+      update(index, { url: url || null });
+    }
+  }
+
   function setMode(index: number, mode: LinkMode) {
     // Only one destination can be live, so switching clears the other.
     if (mode === "portfolio") {
@@ -257,6 +273,21 @@ function LinkedProjectsEditor({
                   </button>
                 </div>
 
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <TextInput
+                    label={index === 0 ? "한 줄 설명 (한국어)" : undefined}
+                    placeholder="홈페이지 만들기 프로젝트"
+                    value={item.note_ko}
+                    onChange={(note_ko) => update(index, { note_ko })}
+                  />
+                  <TextInput
+                    label={index === 0 ? "한 줄 설명 (English)" : undefined}
+                    placeholder="Company website build"
+                    value={item.note_en}
+                    onChange={(note_en) => update(index, { note_en })}
+                  />
+                </div>
+
                 <div className="grid gap-2 sm:grid-cols-[11rem_1fr]">
                   <Select
                     label="이동 대상"
@@ -289,8 +320,9 @@ function LinkedProjectsEditor({
                   {mode === "external" && (
                     <UrlInput
                       label="주소"
+                      hint="이 사이트의 /projects/... 주소를 붙이면 내부 링크로 바뀝니다."
                       value={item.url ?? ""}
-                      onChange={(url) => update(index, { url: url || null })}
+                      onChange={(url) => setUrl(index, url)}
                     />
                   )}
                 </div>
@@ -305,7 +337,14 @@ function LinkedProjectsEditor({
         onClick={() =>
           onChange([
             ...items,
-            { name_ko: "", name_en: "", slug: null, url: null },
+            {
+              name_ko: "",
+              name_en: "",
+              note_ko: "",
+              note_en: "",
+              slug: null,
+              url: null,
+            },
           ])
         }
         className="btn btn-secondary btn-sm self-start border-dashed"
@@ -315,8 +354,8 @@ function LinkedProjectsEditor({
       </button>
 
       <p className="text-2xs text-fg-subtle">
-        회사에서 만든 것을 짧게 나열하고, 긴 설명은 포트폴리오 상세 페이지로
-        넘기세요. 링크가 걸린 항목에는 화살표가 붙습니다.
+        회사 카드 아래에 한 줄씩 표시됩니다. 여기서 짧게 나열하고 긴 설명은
+        포트폴리오 상세 페이지로 넘기세요.
       </p>
     </div>
   );
@@ -571,12 +610,20 @@ function EntryCard({
           <BilingualField
             label="설명"
             multiline
-            rows={4}
+            // Two rows on purpose: a resume line should be short. The box is
+            // still a textarea — drag its corner, and newlines and markdown
+            // survive — because a single-line input would silently flatten
+            // anything already written.
+            rows={2}
             ko={entry.description_ko}
             en={entry.description_en}
             onChangeKo={(v) => set("description_ko", v)}
             onChangeEn={(v) => set("description_en", v)}
-            hint="줄 앞에 - 를 붙이면 목록이 됩니다. **굵게**, `코드` 도 가능합니다."
+            hint={
+              entry.category === "career"
+                ? "어떤 직무였는지 한 줄로. 만든 것들은 아래 '주요 프로젝트'에 나열하세요."
+                : "줄 앞에 - 를 붙이면 목록이 됩니다. **굵게**, `코드` 도 가능합니다."
+            }
           />
 
           <TagInput
@@ -597,11 +644,16 @@ function EntryCard({
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <UrlInput
-              label="관련 링크"
-              value={entry.url ?? ""}
-              onChange={(v) => set("url", v || null)}
-            />
+            {/* Career rows keep their company name as fixed text, so there is
+                no title link to set — project links live in the list above. */}
+            {entry.category !== "career" && (
+              <UrlInput
+                label="관련 링크"
+                hint="제목을 이 주소로 연결합니다."
+                value={entry.url ?? ""}
+                onChange={(v) => set("url", v || null)}
+              />
+            )}
             <BilingualField
               label="장소"
               ko={entry.location_ko ?? ""}

@@ -38,6 +38,8 @@ function toLinkedProjects(value: unknown): LinkedProject[] {
       {
         name_ko: typeof entry.name_ko === "string" ? entry.name_ko : "",
         name_en: typeof entry.name_en === "string" ? entry.name_en : "",
+        note_ko: typeof entry.note_ko === "string" ? entry.note_ko : "",
+        note_en: typeof entry.note_en === "string" ? entry.note_en : "",
         slug: entry.slug?.trim() ? entry.slug.trim() : null,
         url: entry.url?.trim() ? entry.url.trim() : null,
       },

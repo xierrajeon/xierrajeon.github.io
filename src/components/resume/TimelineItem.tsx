@@ -32,52 +32,67 @@ function LinkedProjects({ entry }: { entry: TimelineEntry }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mt-3 flex flex-col gap-1.5">
+    <div className="mt-3.5 flex flex-col gap-1.5">
       <p className="text-2xs font-semibold text-fg-subtle">
         {t("resume.linkedProjects")}
       </p>
-      <ul className="flex flex-wrap gap-1.5">
+
+      <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border">
         {items.map((item, index) => {
           const name = tr(item.name_ko, item.name_en, lang);
           if (!name) return null;
+          const note = tr(item.note_ko, item.note_en, lang);
 
-          const external = item.slug ? null : safeExternalUrl(item.url);
-          const shared =
-            "inline-flex items-center gap-1 rounded-md border border-border bg-surface-sunken px-2 py-1 text-xs font-medium transition-colors";
+          // An internal slug wins: it navigates client-side and survives a
+          // domain change.
+          const internal = item.slug ? routes.project(item.slug) : null;
+          const external = internal ? null : safeExternalUrl(item.url);
+          const href = internal ?? external;
 
-          if (item.slug) {
-            return (
-              <li key={`${item.slug}-${index}`}>
+          const body = (
+            <>
+              <span className="shrink-0 text-xs font-semibold">{name}</span>
+              {note && (
+                <span className="min-w-0 flex-1 truncate text-xs text-fg-muted">
+                  {note}
+                </span>
+              )}
+              {href && (
+                <span className="ml-auto flex shrink-0 items-center gap-1 text-2xs font-semibold text-accent">
+                  {t("portfolio.details")}
+                  {internal ? (
+                    <ArrowRight className="size-3" aria-hidden="true" />
+                  ) : (
+                    <ArrowUpRight className="size-3" aria-hidden="true" />
+                  )}
+                </span>
+              )}
+            </>
+          );
+
+          const row = "flex items-baseline gap-2.5 px-3 py-2";
+
+          return (
+            <li key={`${item.slug ?? item.url ?? name}-${index}`}>
+              {internal ? (
                 <Link
-                  href={routes.project(item.slug)}
-                  className={`${shared} text-accent hover:border-accent hover:bg-accent-soft`}
+                  href={internal}
+                  className={`${row} transition-colors hover:bg-surface-hover`}
                 >
-                  {name}
-                  <ArrowRight className="size-3" aria-hidden="true" />
+                  {body}
                 </Link>
-              </li>
-            );
-          }
-
-          if (external) {
-            return (
-              <li key={`${external}-${index}`}>
+              ) : external ? (
                 <a
                   href={external}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`${shared} text-accent hover:border-accent hover:bg-accent-soft`}
+                  className={`${row} transition-colors hover:bg-surface-hover`}
                 >
-                  {name}
-                  <ArrowUpRight className="size-3" aria-hidden="true" />
+                  {body}
                 </a>
-              </li>
-            );
-          }
-
-          return (
-            <li key={`${name}-${index}`} className={`${shared} text-fg-muted`}>
-              {name}
+              ) : (
+                <div className={row}>{body}</div>
+              )}
             </li>
           );
         })}
@@ -200,7 +215,10 @@ function TitleLine({ entry }: { entry: TimelineEntry }) {
   const title = tr(entry.title_ko, entry.title_en, lang);
   const subtitle = tr(entry.subtitle_ko, entry.subtitle_en, lang);
 
-  const href = safeExternalUrl(entry.url);
+  // A career row's company, role and dates are fixed text. Linking the company
+  // name is confusing next to the project rows below, which are where the
+  // outbound links belong.
+  const href = entry.category === "career" ? null : safeExternalUrl(entry.url);
   const titleNode = href ? (
     <a
       href={href}

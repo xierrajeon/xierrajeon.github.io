@@ -55,3 +55,28 @@ export function safeExternalUrl(raw: string | null | undefined): string | null {
 export function isBrokenUrl(raw: string | null | undefined): boolean {
   return Boolean(raw?.trim()) && safeExternalUrl(raw) === null;
 }
+
+/**
+ * Extracts the project slug from a link to this site's own portfolio page.
+ *
+ * Pasting the full address of a project — which is the obvious thing to do —
+ * would otherwise be stored as an external link, losing client-side navigation
+ * and breaking if the domain ever changes. Recognising it lets the admin turn it
+ * back into an internal reference.
+ */
+export function internalProjectSlug(
+  raw: string | null | undefined,
+  siteOrigin: string,
+): string | null {
+  const value = safeExternalUrl(raw);
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    const site = new URL(siteOrigin);
+    if (url.host !== site.host) return null;
+    const match = /^\/projects\/([^/]+)\/?$/.exec(url.pathname);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return null;
+  }
+}
