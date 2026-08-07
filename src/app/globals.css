@@ -696,20 +696,21 @@
     word-break: break-all;
   }
 
-  /* Heart badge sitting on the bottom-right of the photo. Click increments a
-     server-side counter; the count number sits under the profile card. */
-  /* Sit at the 45° tangent on the bottom-LEFT of the photo circle.
-     The photo is inset 1.25rem inside the frame, so its radius is
-     (frame/2 - 1.25rem). A 45° edge point sits at radius × cos(45°) ≈
-     radius × 0.707 from the frame center; the values below are those
-     coordinates minus the heart's own half-size (1.5rem), one per
-     frame size, so the heart's centre lands right on the circle. */
+  /* Heart badge straddling the bottom-right edge of the photo. Click
+     increments a server-side counter; the count sits under the profile card.
+
+     It rides the 45° tangent of the photo circle. The photo is inset
+     1.25rem inside the frame, so its radius is (frame/2 - 1.25rem); a 45°
+     edge point sits radius × cos(45°) ≈ radius × 0.707 from the centre.
+     The offsets below are that coordinate minus the heart's own half-size
+     (1.5rem), one per frame size, so the heart's centre always lands
+     exactly on the circle no matter which breakpoint is active. */
   .heart-button {
     position: absolute;
-    right: auto;
+    left: auto;
     top: auto;
-    /* 11rem frame → radius 4.25, offset ≈ 3.00 */
-    left: 1rem;
+    /* 11rem frame → radius 4.25rem, offset ≈ 1rem */
+    right: 1rem;
     bottom: 1rem;
     display: inline-flex;
     align-items: center;
@@ -753,15 +754,15 @@
      45° tangent even as the circle grows. */
   @media (min-width: 640px) {
     .heart-button {
-      /* 12.5rem frame → radius 5, offset ≈ 3.54 */
-      left: 1.25rem;
+      /* 12.5rem frame → radius 5rem, offset ≈ 1.25rem */
+      right: 1.25rem;
       bottom: 1.25rem;
     }
   }
   @media (min-width: 1024px) {
     .heart-button {
-      /* 16rem frame → radius 6.75, offset ≈ 4.77 */
-      left: 1.75rem;
+      /* 16rem frame → radius 6.75rem, offset ≈ 1.75rem */
+      right: 1.75rem;
       bottom: 1.75rem;
     }
   }
