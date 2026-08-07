@@ -10,6 +10,11 @@
 !.yarn/releases
 !.yarn/versions
 
+# This project uses npm; pnpm/yarn lockfiles are not authoritative here.
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+
 # testing
 /coverage
 
