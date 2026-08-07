@@ -74,6 +74,17 @@ export function TagInput({
             else setDraft(next);
           }}
           onKeyDown={(event) => {
+            // Korean, Japanese and Chinese input methods send Enter to commit
+            // the syllable being composed, and that keypress reaches keydown
+            // too. Acting on it would file the half-finished word as a tag and
+            // leave the trailing character behind to become the next one —
+            // "성공" became "성" plus a stray "공". The composing keypress
+            // belongs to the IME, so it is ignored here; the next Enter, once
+            // the word is committed, adds the tag.
+            const composing =
+              event.nativeEvent.isComposing || event.keyCode === 229;
+            if (composing) return;
+
             if (event.key === "Enter") {
               event.preventDefault();
               add(draft);
