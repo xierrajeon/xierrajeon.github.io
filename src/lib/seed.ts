@@ -61,6 +61,7 @@ function entry(e: Partial<TimelineEntry> & Pick<TimelineEntry, "id" | "category"
     is_published: true,
     linked_projects: [],
     credential_id: null,
+    score: null,
     majors: [],
     gpa: null,
     gpa_scale: null,

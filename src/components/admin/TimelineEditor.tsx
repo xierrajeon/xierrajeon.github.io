@@ -64,6 +64,7 @@ function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
     is_published: true,
     linked_projects: [],
     credential_id: null,
+    score: null,
     majors: [],
     gpa: null,
     gpa_scale: category === "education" ? 4.5 : null,
@@ -655,13 +656,22 @@ function EntryCard({
                 />
               </div>
 
-              <TextInput
-                label="자격번호"
-                placeholder="24201050123A"
-                value={entry.credential_id ?? ""}
-                onChange={(v) => set("credential_id", v || null)}
-                hint="발급기관이 부여한 번호. 비워두면 표시되지 않습니다."
-              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <TextInput
+                  label="점수 · 등급"
+                  placeholder="예: 950 · IH · 6급"
+                  value={entry.score ?? ""}
+                  onChange={(v) => set("score", v || null)}
+                  hint="어학 시험 점수/등급. 비워두면 표시되지 않습니다."
+                />
+                <TextInput
+                  label="자격번호"
+                  placeholder="24201050123A"
+                  value={entry.credential_id ?? ""}
+                  onChange={(v) => set("credential_id", v || null)}
+                  hint="발급기관이 부여한 번호. 비워두면 표시되지 않습니다."
+                />
+              </div>
             </>
           ) : (
             <>

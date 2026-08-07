@@ -164,6 +164,11 @@ alter table public.timeline_entries
 alter table public.timeline_entries
   add column if not exists credential_id text;
 
+-- Award/certificate-only: score or grade — TOEIC 950, OPIc IH, HSK 6급. Free
+-- text because the shape varies by exam. Hidden when empty.
+alter table public.timeline_entries
+  add column if not exists score text;
+
 -- Added as a separate statement so re-running the file on a table that already
 -- has the column still installs the constraint.
 do $$

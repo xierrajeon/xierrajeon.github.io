@@ -61,6 +61,7 @@ export function normalizeTimelineEntry(row: TimelineEntry): TimelineEntry {
     gpa_scale: toNumber(row.gpa_scale),
     enrollment_status: row.enrollment_status ?? null,
     credential_id: row.credential_id?.trim() ? row.credential_id : null,
+    score: row.score?.trim() ? row.score : null,
   };
 }
 

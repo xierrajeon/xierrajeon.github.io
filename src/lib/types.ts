@@ -137,6 +137,8 @@ export interface TimelineEntry {
 
   /** Award only: the number the issuing body assigned, e.g. a licence number. */
   credential_id: string | null;
+  /** Award only: score or grade — TOEIC 950, OPIc IH, HSK 6급. Free text. */
+  score: string | null;
 
   /* --- education only ---------------------------------------------------- */
   /** One school, potentially several majors of different kinds. */

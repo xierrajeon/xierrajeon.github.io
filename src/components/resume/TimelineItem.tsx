@@ -336,6 +336,16 @@ export function AwardItem({ entry }: { entry: TimelineEntry }) {
         {subtitle && (
           <p className="mt-1 text-xs text-fg-muted">{subtitle}</p>
         )}
+        {entry.score && (
+          <p className="mt-1.5 text-sm">
+            <span className="text-2xs font-semibold text-fg-subtle">
+              {t("resume.score")}
+            </span>{" "}
+            <strong className="font-bold tabular-nums text-accent">
+              {entry.score}
+            </strong>
+          </p>
+        )}
         {entry.credential_id && (
           <p className="mt-1 text-2xs text-fg-subtle">
             {t("resume.credentialId")}{" "}
