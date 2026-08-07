@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ExternalLink, Loader2, Plus } from "lucide-react";
 import {
   BilingualField,
@@ -36,7 +36,11 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
+/** How long the "저장됨" confirmation stays on screen before leaving. */
+const LEAVE_DELAY_MS = 700;
+
 export function ProjectEditor() {
+  const router = useRouter();
   const params = useSearchParams();
   const id = params.get("id");
 
@@ -113,7 +117,13 @@ export function ProjectEditor() {
     [project, blocks],
   );
 
-  async function save() {
+  /**
+   * @param leave  Return to the project list once the write lands. This is the
+   *   default action: saving is normally the last thing you do to a project, and
+   *   staring at the form afterwards leaves you unsure whether it took. Editing
+   *   a long detail page in passes is the exception, so "계속 편집" stays put.
+   */
+  async function save(leave: boolean) {
     if (!project) return;
     const supabase = getSupabaseBrowser();
 
@@ -177,7 +187,11 @@ export function ProjectEditor() {
       setDeletedBlocks([]);
     });
 
-    if (ok) setDirty(false);
+    if (!ok) return;
+    setDirty(false);
+    // Hold the "저장됨" confirmation on screen for a beat before navigating,
+    // so the save is visibly acknowledged rather than just implied.
+    if (leave) setTimeout(() => router.push("/admin/projects"), LEAVE_DELAY_MS);
   }
 
   if (!id || notFound) {
@@ -429,8 +443,18 @@ export function ProjectEditor() {
             status={status}
             error={error}
             dirty={dirty}
-            onSave={() => void save()}
-          />
+            saveLabel="저장하고 목록으로"
+            onSave={() => void save(true)}
+          >
+            <button
+              type="button"
+              onClick={() => void save(false)}
+              disabled={status === "saving"}
+              className="btn btn-secondary"
+            >
+              계속 편집
+            </button>
+          </SaveBar>
         </div>
 
         {/* ---------------------------------------------------------------- */}

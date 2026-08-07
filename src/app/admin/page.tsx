@@ -128,7 +128,7 @@ export default function AdminProfilePage() {
           <BilingualField
             label="소개글"
             multiline
-            rows={5}
+            rows={7}
             ko={draft.bio_ko}
             en={draft.bio_en}
             onChangeKo={(v) => set("bio_ko", v)}

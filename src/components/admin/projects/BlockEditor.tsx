@@ -401,7 +401,7 @@ function BlockForm({ block, patch }: { block: ProjectBlock; patch: Patch }) {
         <BilingualField
           label="본문"
           multiline
-          rows={6}
+          rows={10}
           ko={block.data.text_ko}
           en={block.data.text_en}
           onChangeKo={(text_ko) => patch({ text_ko })}

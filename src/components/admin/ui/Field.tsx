@@ -97,7 +97,14 @@ export function TextArea({
   );
 }
 
-/** Korean and English variants of one field, side by side. */
+/**
+ * Korean and English variants of one field.
+ *
+ * Single-line fields sit side by side, where seeing both at once is useful and
+ * the halved width costs nothing. Multi-line fields stack instead: a body
+ * paragraph squeezed into half a column — itself half the editor, next to the
+ * preview — wraps every few words and is miserable to write in.
+ */
 export function BilingualField({
   label,
   hint,
@@ -126,20 +133,23 @@ export function BilingualField({
   return (
     <div className="field">
       <span className="label">{label}</span>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className={multiline ? "flex flex-col gap-3" : "grid gap-2 sm:grid-cols-2"}>
         <Control
+          // Stacked textareas lose the visual pairing, so each is named.
+          label={multiline ? "한국어" : undefined}
           value={ko}
           onChange={onChangeKo}
           rows={rows}
           placeholder={placeholderKo ?? "한국어"}
-          aria-label={`${label} (한국어)`}
+          aria-label={multiline ? undefined : `${label} (한국어)`}
         />
         <Control
+          label={multiline ? "English" : undefined}
           value={en}
           onChange={onChangeEn}
           rows={rows}
           placeholder={placeholderEn ?? "English"}
-          aria-label={`${label} (English)`}
+          aria-label={multiline ? undefined : `${label} (English)`}
         />
       </div>
       <p className="text-2xs text-fg-subtle">
