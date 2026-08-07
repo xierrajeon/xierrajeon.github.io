@@ -68,12 +68,13 @@ export function useLikes(initial: number = 0) {
       if (error) throw error;
       const next = Number(data);
       if (Number.isFinite(next)) setCount(next);
-    } catch {
-      // Roll back the optimistic update.
-      setHasLiked(false);
-      setCount((c) => Math.max(0, c - 1));
-      if (typeof window !== "undefined") {
-        window.localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      // Server unreachable or the RPC is missing (schema not applied yet).
+      // Keep the visitor's local "liked" memory so a page reload still shows
+      // the filled heart — the counter is a vanity signal, not an audit log.
+      // The count will re-sync from the server on the next successful fetch.
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[useLikes] increment_like failed:", err);
       }
     } finally {
       setPending(false);

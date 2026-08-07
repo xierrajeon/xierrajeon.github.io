@@ -53,8 +53,10 @@ export function ProfileCard({
   return (
     <section className="card p-5 sm:p-8">
       <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-start lg:gap-10">
-        {/* Left column — photo + status + primary actions */}
-        <div className="flex w-full flex-col items-center gap-4 lg:w-auto lg:shrink-0">
+        {/* Left column — photo + status + primary actions. gap-7 so the
+            buttons never touch the photo even when the status pill is
+            missing (which removes one row from this stack). */}
+        <div className="flex w-full flex-col items-center gap-7 lg:w-auto lg:shrink-0">
           <PhotoFrame
             src={profile.photo_url}
             alt={displayName || "profile"}
@@ -65,19 +67,15 @@ export function ProfileCard({
           />
 
           {status && (
-            <div className="mt-2 flex flex-col items-center gap-1.5 text-center">
-              <span className="status-pill-lg">
-                {profile.status_active && (
-                  <span className="status-dot" aria-hidden="true" />
-                )}
-                {status}
-              </span>
-            </div>
+            <span className="status-pill-lg">
+              {profile.status_active && (
+                <span className="status-dot" aria-hidden="true" />
+              )}
+              {status}
+            </span>
           )}
 
-          {/* mt-4 keeps the buttons clear of the heart badge, which extends
-              beyond the photo circle's visible bottom edge. */}
-          <div className="mt-4 flex w-full flex-col gap-2 sm:w-64">
+          <div className="flex w-full flex-col gap-2 sm:w-64">
             {email && (
               <a href={`mailto:${email}`} className="btn btn-primary btn-lg">
                 <Mail className="size-4" aria-hidden="true" />

@@ -137,7 +137,7 @@ export const dict = {
     "resume.print": "Save as PDF",
     "resume.downloadPdf": "Resume PDF",
     "profile.status": "OPEN TO WORK",
-    "profile.contactMe": "Contact Me",
+    "profile.contactMe": "Contact",
     "profile.downloadResume": "Download Resume",
     "profile.phone": "Phone",
     "profile.website": "Website",
