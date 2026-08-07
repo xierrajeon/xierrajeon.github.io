@@ -95,9 +95,9 @@ export function ProfileCard({
             </p>
           )}
 
-          <ContactRows profile={profile} location={location} />
-
           {bio && <Markdown className="rich-text mt-3">{bio}</Markdown>}
+
+          <ContactRows profile={profile} location={location} />
         </div>
 
         {showPrint && (
