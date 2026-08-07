@@ -13,34 +13,20 @@ import { tr } from "@/lib/i18n";
 import { safeExternalUrl } from "@/lib/url";
 import type { Profile } from "@/lib/types";
 
-/** Order matches the SiteFooter so both surfaces read the same way. */
-const CONTACT_LINKS: {
+/**
+ * Social links stay icon-only — the addresses (github.com/xxx, linkedin.com/in/xxx)
+ * would repeat information already conveyed by the logo and get long enough to
+ * wrap awkwardly on mobile.
+ */
+const SOCIAL_LINKS: {
   key: keyof Profile;
   label: string;
   Icon: IconComponent;
-  /** Turns the raw column value into an anchor href. */
-  href: (value: string) => string | null;
 }[] = [
-  {
-    key: "email",
-    label: "Email",
-    Icon: Mail,
-    href: (value) => (value.trim() ? `mailto:${value.trim()}` : null),
-  },
-  {
-    key: "phone",
-    label: "Phone",
-    Icon: Phone,
-    // `tel:` accepts a URI, so strip spaces and dashes but keep the leading `+`.
-    href: (value) => {
-      const cleaned = value.replace(/[^\d+]/g, "");
-      return cleaned ? `tel:${cleaned}` : null;
-    },
-  },
-  { key: "github_url", label: "GitHub", Icon: GithubIcon, href: safeExternalUrl },
-  { key: "linkedin_url", label: "LinkedIn", Icon: LinkedinIcon, href: safeExternalUrl },
-  { key: "blog_url", label: "Blog", Icon: NotebookPen, href: safeExternalUrl },
-  { key: "website_url", label: "Website", Icon: Globe, href: safeExternalUrl },
+  { key: "github_url", label: "GitHub", Icon: GithubIcon },
+  { key: "linkedin_url", label: "LinkedIn", Icon: LinkedinIcon },
+  { key: "blog_url", label: "Blog", Icon: NotebookPen },
+  { key: "website_url", label: "Website", Icon: Globe },
 ];
 
 export function ProfileCard({
@@ -109,14 +95,7 @@ export function ProfileCard({
             </p>
           )}
 
-          {location && (
-            <p className="mt-2 flex items-center justify-center gap-1 text-xs text-fg-subtle sm:justify-start">
-              <MapPin className="size-3.5" aria-hidden="true" />
-              {location}
-            </p>
-          )}
-
-          <ContactLinks profile={profile} />
+          <ContactRows profile={profile} location={location} />
 
           {bio && <Markdown className="rich-text mt-3">{bio}</Markdown>}
         </div>
@@ -136,36 +115,69 @@ export function ProfileCard({
   );
 }
 
-function ContactLinks({ profile }: { profile: Profile }) {
-  const links = CONTACT_LINKS.flatMap(({ key, label, Icon, href }) => {
-    const raw = profile[key] as string | null | undefined;
-    if (!raw) return [];
-    const resolved = href(raw);
-    return resolved ? [{ key, label, Icon, href: resolved }] : [];
+function ContactRows({
+  profile,
+  location,
+}: {
+  profile: Profile;
+  location: string;
+}) {
+  const email = profile.email?.trim() || null;
+  const phone = profile.phone?.trim() || null;
+  // Strip spaces/hyphens for the tel: URI while keeping the leading `+`.
+  const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
+
+  const socials = SOCIAL_LINKS.flatMap(({ key, label, Icon }) => {
+    const href = safeExternalUrl(profile[key] as string | null | undefined);
+    return href ? [{ key, label, Icon, href }] : [];
   });
-  if (links.length === 0) return null;
+
+  if (!location && !email && !phone && socials.length === 0) return null;
 
   return (
-    <ul className="mt-3 flex flex-wrap items-center justify-center gap-1 sm:justify-start">
-      {links.map(({ key, label, Icon, href }) => {
-        // `mailto:` and `tel:` open handlers on the same tab — external URLs
-        // open in a new one so a portfolio visit is not lost on click.
-        const external = href.startsWith("http");
-        return (
-          <li key={key}>
-            <a
-              href={href}
-              target={external ? "_blank" : undefined}
-              rel={external ? "noopener noreferrer me" : undefined}
-              aria-label={label}
-              title={label}
-              className="btn btn-ghost btn-icon btn-sm"
-            >
-              <Icon className="size-4" aria-hidden="true" />
-            </a>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="mt-2 flex flex-col items-center gap-1 sm:items-start">
+      {location && (
+        <p className="flex items-center gap-1 text-xs text-fg-subtle">
+          <MapPin className="size-3.5" aria-hidden="true" />
+          {location}
+        </p>
+      )}
+      {email && (
+        <a
+          href={`mailto:${email}`}
+          className="flex items-center gap-1 text-xs text-fg-subtle hover:text-accent"
+        >
+          <Mail className="size-3.5" aria-hidden="true" />
+          {email}
+        </a>
+      )}
+      {phone && telHref && (
+        <a
+          href={telHref}
+          className="flex items-center gap-1 text-xs text-fg-subtle hover:text-accent"
+        >
+          <Phone className="size-3.5" aria-hidden="true" />
+          {phone}
+        </a>
+      )}
+      {socials.length > 0 && (
+        <ul className="mt-1 flex flex-wrap items-center gap-1">
+          {socials.map(({ key, label, Icon, href }) => (
+            <li key={key}>
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer me"
+                aria-label={label}
+                title={label}
+                className="btn btn-ghost btn-icon btn-sm"
+              >
+                <Icon className="size-4" aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
