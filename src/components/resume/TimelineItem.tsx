@@ -305,7 +305,7 @@ export function TimelineItem({ entry }: { entry: TimelineEntry }) {
 
 /** Awards are single points in time, so they read better as a compact grid. */
 export function AwardItem({ entry }: { entry: TimelineEntry }) {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const title = tr(entry.title_ko, entry.title_en, lang);
   const subtitle = tr(entry.subtitle_ko, entry.subtitle_en, lang);
   const description = tr(entry.description_ko, entry.description_en, lang);
@@ -335,6 +335,12 @@ export function AwardItem({ entry }: { entry: TimelineEntry }) {
         </div>
         {subtitle && (
           <p className="mt-1 text-xs text-fg-muted">{subtitle}</p>
+        )}
+        {entry.credential_id && (
+          <p className="mt-1 text-2xs text-fg-subtle">
+            {t("resume.credentialId")}{" "}
+            <span className="font-mono tabular-nums">{entry.credential_id}</span>
+          </p>
         )}
         {description && (
           <Markdown className="rich-text mt-2 text-sm">{description}</Markdown>

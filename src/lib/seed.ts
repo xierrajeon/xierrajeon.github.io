@@ -1,3 +1,4 @@
+import { RESUME_SECTIONS } from "./types";
 import type {
   Profile,
   Project,
@@ -37,6 +38,7 @@ export const seedProfile: Profile = {
   linkedin_url: null,
   blog_url: null,
   website_url: null,
+  section_order: [...RESUME_SECTIONS],
 };
 
 function entry(e: Partial<TimelineEntry> & Pick<TimelineEntry, "id" | "category">): TimelineEntry {
@@ -58,6 +60,7 @@ function entry(e: Partial<TimelineEntry> & Pick<TimelineEntry, "id" | "category"
     sort_order: 0,
     is_published: true,
     linked_projects: [],
+    credential_id: null,
     majors: [],
     gpa: null,
     gpa_scale: null,
@@ -144,6 +147,7 @@ export const seedTimeline: TimelineEntry[] = [
       "Built a realtime collaborative editor with a team of four in 48 hours; placed second.",
     start_date: "2022-10-01",
     date_precision: "month",
+    credential_id: "2022-SW-0417",
     tags: ["WebSocket", "CRDT"],
     sort_order: 0,
   }),

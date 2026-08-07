@@ -36,6 +36,7 @@ export const dict = {
     "resume.skills": "기술 스택",
     "resume.gpa": "학점",
     "resume.linkedProjects": "프로젝트 · 기술수행",
+    "resume.credentialId": "자격번호",
 
     "major.primary": "주전공",
     "major.double": "복수전공",
@@ -110,6 +111,7 @@ export const dict = {
     "resume.skills": "Skills",
     "resume.gpa": "GPA",
     "resume.linkedProjects": "Projects & Work",
+    "resume.credentialId": "Credential ID",
 
     "major.primary": "Major",
     "major.double": "Double Major",

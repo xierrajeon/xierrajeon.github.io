@@ -1,4 +1,5 @@
 import { tagStyle } from "@/lib/tagColor";
+import { TechIcon } from "./TechIcon";
 
 export interface TagListProps {
   tags: string[] | null | undefined;
@@ -28,6 +29,7 @@ export function TagList({
             className={variant === "tech" ? "tag tag-tech" : "tag"}
             style={variant === "tech" ? tagStyle(tag) : undefined}
           >
+            {variant === "tech" && <TechIcon tag={tag} />}
             {tag}
           </span>
         </li>

@@ -5,6 +5,7 @@ import { LayoutGrid } from "lucide-react";
 import { useLang } from "@/components/providers/AppProviders";
 import { ProfileCard } from "@/components/resume/ProfileCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { TechIcon } from "@/components/ui/TechIcon";
 import { ProjectCard } from "./ProjectCard";
 import { collectTags } from "@/lib/tags";
 import { useLive } from "@/lib/useLive";
@@ -50,6 +51,7 @@ function TagFilter({
             active === tag ? "" : "tag-tech"
           }`}
         >
+          <TechIcon tag={tag} />
           {tag}
         </button>
       ))}

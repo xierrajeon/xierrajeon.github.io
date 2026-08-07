@@ -82,6 +82,15 @@ alter table public.profile add column if not exists status_ko text;
 alter table public.profile add column if not exists status_en text;
 alter table public.profile add column if not exists status_active boolean not null default false;
 
+-- Resume section layout, reordered from the admin settings page. The values
+-- are the section keys the resume view knows how to render, and the default
+-- covers all of them so a fresh row renders the full page. Values mirror
+-- `RESUME_SECTIONS` in src/lib/types.ts — keep them in sync when adding a
+-- section.
+alter table public.profile
+  add column if not exists section_order text[] not null
+  default '{skills,education,career,activity,award}';
+
 insert into public.profile (id) values (1) on conflict (id) do nothing;
 
 drop trigger if exists profile_touch on public.profile;
@@ -148,6 +157,12 @@ alter table public.timeline_entries
 --      "slug": "ged", "url": null }]
 alter table public.timeline_entries
   add column if not exists linked_projects jsonb not null default '[]'::jsonb;
+
+-- Award/certificate-only: the number the issuing body assigned. Certificates
+-- are single-point events, so they use `start_date` alone as the date acquired
+-- and ignore `end_date` / `is_current`.
+alter table public.timeline_entries
+  add column if not exists credential_id text;
 
 -- Added as a separate statement so re-running the file on a table that already
 -- has the column still installs the constraint.

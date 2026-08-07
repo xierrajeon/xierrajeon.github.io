@@ -4,14 +4,33 @@
 
 export type Lang = "ko" | "en";
 
+/**
+ * Display order for the resume sections and the admin tabs alike — declared
+ * once so the two can never drift apart.
+ */
 export const TIMELINE_CATEGORIES = [
-  "career",
   "education",
-  "award",
+  "career",
   "activity",
+  "award",
 ] as const;
 
 export type TimelineCategory = (typeof TIMELINE_CATEGORIES)[number];
+
+/**
+ * All sections the resume view can render, in the default display order. The
+ * profile stores a permutation of these keys under `section_order`, so admins
+ * can rearrange the page from the settings tab without a code change.
+ */
+export const RESUME_SECTIONS = [
+  "skills",
+  "education",
+  "career",
+  "activity",
+  "award",
+] as const;
+
+export type ResumeSection = (typeof RESUME_SECTIONS)[number];
 
 export type DatePrecision = "day" | "month" | "year";
 
@@ -88,6 +107,8 @@ export interface Profile {
   linkedin_url: string | null;
   blog_url: string | null;
   website_url: string | null;
+  /** Order the resume tab renders its sections in. See `RESUME_SECTIONS`. */
+  section_order: ResumeSection[];
   updated_at?: string;
 }
 
@@ -113,6 +134,9 @@ export interface TimelineEntry {
 
   /** Career only: projects built there, linked to the portfolio or outward. */
   linked_projects: LinkedProject[];
+
+  /** Award only: the number the issuing body assigned, e.g. a licence number. */
+  credential_id: string | null;
 
   /* --- education only ---------------------------------------------------- */
   /** One school, potentially several majors of different kinds. */

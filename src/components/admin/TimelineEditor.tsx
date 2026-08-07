@@ -63,6 +63,7 @@ function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
     sort_order: index,
     is_published: true,
     linked_projects: [],
+    credential_id: null,
     majors: [],
     gpa: null,
     gpa_scale: category === "education" ? 4.5 : null,
@@ -633,46 +634,77 @@ function EntryCard({
             </>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <TextInput
-              label="시작일"
-              type="date"
-              value={entry.start_date ?? ""}
-              onChange={(v) => set("start_date", v || null)}
-            />
-            <TextInput
-              label="종료일"
-              type="date"
-              value={entry.end_date ?? ""}
-              onChange={(v) => set("end_date", v || null)}
-              disabled={entry.is_current}
-              hint={
-                entry.is_current
-                  ? "진행 중이면 비활성화됩니다."
-                  : "단일 시점(수상 등)이면 비워두세요."
-              }
-            />
-            <Select
-              label="날짜 표기"
-              value={entry.date_precision}
-              options={PRECISION_OPTIONS}
-              onChange={(v) => set("date_precision", v)}
-            />
-          </div>
+          {/* Awards and certificates are single-point events — the renderer
+              only ever shows their start date — so offering a range and an
+              "in progress" flag here just invited filling in fields that go
+              nowhere. */}
+          {entry.category === "award" ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <TextInput
+                  label="취득일"
+                  type="date"
+                  value={entry.start_date ?? ""}
+                  onChange={(v) => set("start_date", v || null)}
+                />
+                <Select
+                  label="날짜 표기"
+                  value={entry.date_precision}
+                  options={PRECISION_OPTIONS}
+                  onChange={(v) => set("date_precision", v)}
+                />
+              </div>
 
-          <Toggle
-            label={entry.category === "career" ? "재직 중" : "진행 중"}
-            checked={entry.is_current}
-            onChange={(v) => {
-              onChange({
-                ...entry,
-                is_current: v,
-                // Keeping a stale end date alongside "in progress" would render
-                // contradictory text.
-                end_date: v ? null : entry.end_date,
-              });
-            }}
-          />
+              <TextInput
+                label="자격번호"
+                placeholder="24201050123A"
+                value={entry.credential_id ?? ""}
+                onChange={(v) => set("credential_id", v || null)}
+                hint="발급기관이 부여한 번호. 비워두면 표시되지 않습니다."
+              />
+            </>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <TextInput
+                  label="시작일"
+                  type="date"
+                  value={entry.start_date ?? ""}
+                  onChange={(v) => set("start_date", v || null)}
+                />
+                <TextInput
+                  label="종료일"
+                  type="date"
+                  value={entry.end_date ?? ""}
+                  onChange={(v) => set("end_date", v || null)}
+                  disabled={entry.is_current}
+                  hint={
+                    entry.is_current ? "진행 중이면 비활성화됩니다." : undefined
+                  }
+                />
+                <Select
+                  label="날짜 표기"
+                  value={entry.date_precision}
+                  options={PRECISION_OPTIONS}
+                  onChange={(v) => set("date_precision", v)}
+                />
+              </div>
+
+              <Toggle
+                label={entry.category === "career" ? "재직 중" : "진행 중"}
+                checked={entry.is_current}
+                onChange={(v) => {
+                  onChange({
+                    ...entry,
+                    is_current: v,
+                    // Keeping a stale end date alongside "in progress" would
+                    // render contradictory text.
+                    end_date: v ? null : entry.end_date,
+                  });
+                }}
+              />
+            </>
+          )}
 
           <BilingualField
             label="설명"

@@ -4,10 +4,7 @@ import { ProfileCard } from "./ProfileCard";
 import { SkillsSection } from "./SkillsSection";
 import { TimelineSection } from "./TimelineSection";
 import { useLive } from "@/lib/useLive";
-import type { ResumeData, TimelineCategory } from "@/lib/types";
-
-/** Career first, then the sections a Korean CV expects in this order. */
-const ORDER: TimelineCategory[] = ["career", "education", "award", "activity"];
+import type { ResumeData, ResumeSection } from "@/lib/types";
 
 export function ResumeView({ initial }: { initial: ResumeData }) {
   // Pre-rendered content hydrates first, then the newest rows replace it.
@@ -21,15 +18,23 @@ export function ResumeView({ initial }: { initial: ResumeData }) {
     <div className="container-page">
       <div className="stack-section">
         <ProfileCard profile={data.profile} showPrint />
-        {ORDER.map((category) => (
-          <TimelineSection
-            key={category}
-            category={category}
-            entries={data.entries}
-          />
-        ))}
-        <SkillsSection skills={data.skills} />
+        {data.profile.section_order.map((section) =>
+          renderSection(section, data),
+        )}
       </div>
     </div>
+  );
+}
+
+function renderSection(section: ResumeSection, data: ResumeData) {
+  if (section === "skills") {
+    return <SkillsSection key={section} skills={data.skills} />;
+  }
+  return (
+    <TimelineSection
+      key={section}
+      category={section}
+      entries={data.entries}
+    />
   );
 }

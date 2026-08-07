@@ -13,10 +13,14 @@ import { SaveBar } from "@/components/admin/ui/SaveBar";
 import { ProfileCard } from "@/components/resume/ProfileCard";
 import { getSupabaseBrowser } from "@/lib/supabase";
 import { useSaver } from "@/lib/admin/useSaver";
+import { RESUME_SECTIONS } from "@/lib/types";
 import type { Profile } from "@/lib/types";
 
-/** Columns the form owns. `id` and `updated_at` are managed by the database. */
-type Draft = Omit<Profile, "id" | "updated_at">;
+/**
+ * Columns the form owns. `id` and `updated_at` are managed by the database;
+ * `section_order` is edited from the settings tab.
+ */
+type Draft = Omit<Profile, "id" | "updated_at" | "section_order">;
 
 const EMPTY: Draft = {
   name_ko: "",
@@ -53,8 +57,11 @@ export default function AdminProfilePage() {
       .eq("id", 1)
       .maybeSingle()
       .then(({ data }) => {
-        const row = (data ?? {}) as Partial<Draft>;
-        setDraft({ ...EMPTY, ...row });
+        // Strip section_order — the settings tab owns it and this form must not
+        // round-trip its value.
+        const { section_order: _, ...rest } =
+          (data ?? {}) as Partial<Profile>;
+        setDraft({ ...EMPTY, ...(rest as Partial<Draft>) });
       });
   }, []);
 
@@ -225,7 +232,7 @@ export default function AdminProfilePage() {
       <aside className="lg:sticky lg:top-28">
         <p className="eyebrow mb-2">미리보기</p>
         <div className="rounded-[var(--radius-card)] bg-bg-subtle p-3">
-          <ProfileCard profile={{ ...draft, id: 1 }} />
+          <ProfileCard profile={{ ...draft, id: 1, section_order: [...RESUME_SECTIONS] }} />
         </div>
       </aside>
     </div>

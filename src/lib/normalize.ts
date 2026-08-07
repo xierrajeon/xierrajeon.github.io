@@ -1,4 +1,5 @@
-import type { LinkedProject, Major, TimelineEntry } from "./types";
+import { RESUME_SECTIONS } from "./types";
+import type { LinkedProject, Major, ResumeSection, TimelineEntry } from "./types";
 
 /**
  * Coerces a row into the shape the components expect.
@@ -59,9 +60,35 @@ export function normalizeTimelineEntry(row: TimelineEntry): TimelineEntry {
     gpa: toNumber(row.gpa),
     gpa_scale: toNumber(row.gpa_scale),
     enrollment_status: row.enrollment_status ?? null,
+    credential_id: row.credential_id?.trim() ? row.credential_id : null,
   };
 }
 
 export function normalizeTimelineEntries(rows: TimelineEntry[]): TimelineEntry[] {
   return rows.map(normalizeTimelineEntry);
+}
+
+/**
+ * Guarantees the profile's `section_order` covers every known section exactly
+ * once. Unknown keys are dropped and missing ones append in their default order,
+ * so an install that predates a new section still renders it at the bottom
+ * rather than hiding it silently.
+ */
+export function normalizeSectionOrder(value: unknown): ResumeSection[] {
+  const known = new Set<ResumeSection>(RESUME_SECTIONS);
+  const seen = new Set<ResumeSection>();
+  const out: ResumeSection[] = [];
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (typeof item !== "string") continue;
+      const section = item as ResumeSection;
+      if (!known.has(section) || seen.has(section)) continue;
+      seen.add(section);
+      out.push(section);
+    }
+  }
+  for (const section of RESUME_SECTIONS) {
+    if (!seen.has(section)) out.push(section);
+  }
+  return out;
 }

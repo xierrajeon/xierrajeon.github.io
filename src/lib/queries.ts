@@ -1,4 +1,4 @@
-import { normalizeTimelineEntries } from "./normalize";
+import { normalizeSectionOrder, normalizeTimelineEntries } from "./normalize";
 import { getSupabaseRead } from "./supabase";
 import {
   seedBlocks,
@@ -82,7 +82,8 @@ export async function getProfile(): Promise<Profile> {
     if (!data) return seedProfile;
     // A row exists but is still blank right after running schema.sql.
     if (!data.name_ko?.trim() && !data.name_en?.trim()) return seedProfile;
-    return data as Profile;
+    const row = data as Profile;
+    return { ...row, section_order: normalizeSectionOrder(row.section_order) };
   } catch (error) {
     warn("getProfile", error);
     return seedProfile;
