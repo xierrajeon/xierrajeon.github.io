@@ -16,7 +16,7 @@ import type {
 
 export const seedProfile: Profile = {
   id: 1,
-  name_ko: "전O현",
+  name_ko: "전OO",
   name_en: "Xierra Jeon",
   tagline_ko: "제품이 실제로 굴러가게 만드는 데 관심이 많은 개발자",
   tagline_en: "Developer focused on making products actually ship",
@@ -41,7 +41,9 @@ export const seedProfile: Profile = {
   section_order: [...RESUME_SECTIONS],
 };
 
-function entry(e: Partial<TimelineEntry> & Pick<TimelineEntry, "id" | "category">): TimelineEntry {
+function entry(
+  e: Partial<TimelineEntry> & Pick<TimelineEntry, "id" | "category">,
+): TimelineEntry {
   return {
     title_ko: "",
     title_en: "",
@@ -128,7 +130,11 @@ export const seedTimeline: TimelineEntry[] = [
         name_en: "Computer Science",
         kind: "primary",
       },
-      { name_ko: "경영학과", name_en: "Business Administration", kind: "double" },
+      {
+        name_ko: "경영학과",
+        name_en: "Business Administration",
+        kind: "double",
+      },
     ],
     gpa: 3.8,
     gpa_scale: 4.5,
@@ -143,7 +149,8 @@ export const seedTimeline: TimelineEntry[] = [
     title_en: "University Hackathon, Excellence Award",
     subtitle_ko: "OO대학교 SW중심대학사업단",
     subtitle_en: "OO University SW Program",
-    description_ko: "48시간 동안 팀 4명으로 실시간 협업 편집 서비스를 만들어 2위 수상.",
+    description_ko:
+      "48시간 동안 팀 4명으로 실시간 협업 편집 서비스를 만들어 2위 수상.",
     description_en:
       "Built a realtime collaborative editor with a team of four in 48 hours; placed second.",
     start_date: "2022-10-01",
@@ -159,7 +166,8 @@ export const seedTimeline: TimelineEntry[] = [
     title_en: "Open Source Contributions",
     subtitle_ko: "문서 번역 및 버그 수정",
     subtitle_en: "Docs translation and bug fixes",
-    description_ko: "사용하던 라이브러리의 한국어 문서를 번역하고, 재현되는 버그 3건을 수정해 머지.",
+    description_ko:
+      "사용하던 라이브러리의 한국어 문서를 번역하고, 재현되는 버그 3건을 수정해 머지.",
     description_en:
       "Translated Korean docs for libraries I use daily and landed three reproducible bug fixes.",
     start_date: "2023-05-01",
@@ -170,14 +178,78 @@ export const seedTimeline: TimelineEntry[] = [
 ];
 
 export const seedSkills: Skill[] = [
-  { id: "s1", group_ko: "언어", group_en: "Languages", name: "TypeScript", level: 5, sort_order: 0, is_published: true },
-  { id: "s2", group_ko: "언어", group_en: "Languages", name: "Python", level: 3, sort_order: 1, is_published: true },
-  { id: "s3", group_ko: "프론트엔드", group_en: "Frontend", name: "React", level: 5, sort_order: 2, is_published: true },
-  { id: "s4", group_ko: "프론트엔드", group_en: "Frontend", name: "Next.js", level: 4, sort_order: 3, is_published: true },
-  { id: "s5", group_ko: "프론트엔드", group_en: "Frontend", name: "Tailwind CSS", level: 4, sort_order: 4, is_published: true },
-  { id: "s6", group_ko: "백엔드 · 인프라", group_en: "Backend · Infra", name: "PostgreSQL", level: 3, sort_order: 5, is_published: true },
-  { id: "s7", group_ko: "백엔드 · 인프라", group_en: "Backend · Infra", name: "Supabase", level: 4, sort_order: 6, is_published: true },
-  { id: "s8", group_ko: "백엔드 · 인프라", group_en: "Backend · Infra", name: "GitHub Actions", level: 3, sort_order: 7, is_published: true },
+  {
+    id: "s1",
+    group_ko: "언어",
+    group_en: "Languages",
+    name: "TypeScript",
+    level: 5,
+    sort_order: 0,
+    is_published: true,
+  },
+  {
+    id: "s2",
+    group_ko: "언어",
+    group_en: "Languages",
+    name: "Python",
+    level: 3,
+    sort_order: 1,
+    is_published: true,
+  },
+  {
+    id: "s3",
+    group_ko: "프론트엔드",
+    group_en: "Frontend",
+    name: "React",
+    level: 5,
+    sort_order: 2,
+    is_published: true,
+  },
+  {
+    id: "s4",
+    group_ko: "프론트엔드",
+    group_en: "Frontend",
+    name: "Next.js",
+    level: 4,
+    sort_order: 3,
+    is_published: true,
+  },
+  {
+    id: "s5",
+    group_ko: "프론트엔드",
+    group_en: "Frontend",
+    name: "Tailwind CSS",
+    level: 4,
+    sort_order: 4,
+    is_published: true,
+  },
+  {
+    id: "s6",
+    group_ko: "백엔드 · 인프라",
+    group_en: "Backend · Infra",
+    name: "PostgreSQL",
+    level: 3,
+    sort_order: 5,
+    is_published: true,
+  },
+  {
+    id: "s7",
+    group_ko: "백엔드 · 인프라",
+    group_en: "Backend · Infra",
+    name: "Supabase",
+    level: 4,
+    sort_order: 6,
+    is_published: true,
+  },
+  {
+    id: "s8",
+    group_ko: "백엔드 · 인프라",
+    group_en: "Backend · Infra",
+    name: "GitHub Actions",
+    level: 3,
+    sort_order: 7,
+    is_published: true,
+  },
 ];
 
 function project(p: Partial<Project> & Pick<Project, "id" | "slug">): Project {
@@ -212,7 +284,8 @@ export const seedProjects: Project[] = [
     slug: "chat-emoji-picker",
     title_ko: "채팅 이모지 첨부 기능",
     title_en: "Chat Emoji Picker",
-    summary_ko: "입력창을 벗어나지 않고 이모지를 고르고, 최근 사용 순으로 기억하는 피커를 만들었습니다.",
+    summary_ko:
+      "입력창을 벗어나지 않고 이모지를 고르고, 최근 사용 순으로 기억하는 피커를 만들었습니다.",
     summary_en:
       "A picker that never steals focus from the composer and remembers what you actually use.",
     tags: ["React", "TypeScript", "Zustand", "IndexedDB"],
@@ -233,7 +306,8 @@ export const seedProjects: Project[] = [
     title_ko: "포트폴리오 어드민",
     title_en: "Portfolio Admin",
     summary_ko: "정적 사이트에 붙는 CMS. 저장하면 배포 없이 바로 반영됩니다.",
-    summary_en: "A CMS bolted onto a static site — saving publishes instantly, no rebuild.",
+    summary_en:
+      "A CMS bolted onto a static site — saving publishes instantly, no rebuild.",
     tags: ["Next.js", "Supabase", "Tailwind CSS", "GitHub Actions"],
     category_ko: "도구",
     category_en: "Tooling",
@@ -246,7 +320,9 @@ export const seedProjects: Project[] = [
   }),
 ];
 
-function block(b: Omit<ProjectBlock, "project_id"> & { project_id?: string }): ProjectBlock {
+function block(
+  b: Omit<ProjectBlock, "project_id"> & { project_id?: string },
+): ProjectBlock {
   return { project_id: "seed-p1", ...b } as ProjectBlock;
 }
 
@@ -336,8 +412,10 @@ const index = useMemo(
 const results = useDeferredValue(
   query.length < 1 ? recents : index.search(query, { limit: 40 }),
 );`,
-        caption_ko: "검색은 deferred value로 감싸서 타이핑을 막지 않게 했습니다.",
-        caption_en: "Search is wrapped in a deferred value so it never blocks typing.",
+        caption_ko:
+          "검색은 deferred value로 감싸서 타이핑을 막지 않게 했습니다.",
+        caption_en:
+          "Search is wrapped in a deferred value so it never blocks typing.",
       },
     }),
     block({
@@ -391,8 +469,10 @@ const results = useDeferredValue(
         url: "https://github.com/xierrajeon",
         label_ko: "해당 기능 소스 보기",
         label_en: "Browse the source",
-        description_ko: "피커 컴포넌트와 검색 인덱스 구현만 공개로 분리해 두었습니다.",
-        description_en: "The picker component and search index are split out into a public repo.",
+        description_ko:
+          "피커 컴포넌트와 검색 인덱스 구현만 공개로 분리해 두었습니다.",
+        description_en:
+          "The picker component and search index are split out into a public repo.",
       },
     }),
   ],

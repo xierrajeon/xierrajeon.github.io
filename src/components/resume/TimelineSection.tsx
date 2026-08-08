@@ -45,9 +45,12 @@ export const CATEGORY_CONFIG: Record<TimelineCategory, CategoryConfig> = {
 export function TimelineSection({
   category,
   entries,
+  /** Id of the entry the reader is currently on, resolved page-wide. */
+  activeId = null,
 }: {
   category: TimelineCategory;
   entries: TimelineEntry[];
+  activeId?: string | null;
 }) {
   const config = CATEGORY_CONFIG[category];
   const items = entries.filter((entry) => entry.category === category);
@@ -78,7 +81,11 @@ export function TimelineSection({
           />
           <ul className="flex flex-col gap-3">
             {items.map((entry) => (
-              <TimelineItem key={entry.id} entry={entry} />
+              <TimelineItem
+                key={entry.id}
+                entry={entry}
+                active={entry.id === activeId}
+              />
             ))}
           </ul>
         </div>

@@ -539,6 +539,45 @@
     font-weight: 500;
   }
 
+  /* --- timeline rail ---------------------------------------------------- */
+  /* One dot per entry, sitting on the vertical rail. Dark by default and lit
+     in the accent colour while the reader is on that entry, so the rail
+     doubles as a "you are here" marker. See src/lib/useScrollSpy.ts. */
+  .timeline-dot {
+    position: absolute;
+    top: 1.25rem;
+    left: -1.4375rem;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    background-color: var(--border-strong);
+    /* Punches a hole in the rail line behind it. */
+    box-shadow: 0 0 0 4px var(--bg);
+    transition:
+      background-color 0.35s var(--ease-out-quart),
+      box-shadow 0.35s var(--ease-out-quart),
+      transform 0.35s var(--ease-out-quart);
+  }
+  @media (min-width: 640px) {
+    .timeline-dot {
+      left: -1.9375rem;
+    }
+  }
+  .timeline-dot[data-active="true"] {
+    background-color: var(--accent);
+    transform: scale(1.2);
+    box-shadow:
+      0 0 0 4px var(--bg),
+      0 0 0 7px var(--accent-ring);
+  }
+  /* On paper there is no scroll position, so every entry reads as present. */
+  @media print {
+    .timeline-dot {
+      background-color: var(--accent);
+      transform: none;
+    }
+  }
+
   /* --- profile card ----------------------------------------------------- */
   /* The framed photo with orbital rings, sparkles and a heart badge. Made
      of layered SVGs positioned around the image; no raster assets. */

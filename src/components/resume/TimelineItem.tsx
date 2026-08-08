@@ -264,16 +264,24 @@ function TitleLine({ entry }: { entry: TimelineEntry }) {
 }
 
 /** Career, education and activity rows: full-width card on a timeline rail. */
-export function TimelineItem({ entry }: { entry: TimelineEntry }) {
+export function TimelineItem({
+  entry,
+  /** True while the reader is scrolled onto this entry — lights its rail dot. */
+  active = false,
+}: {
+  entry: TimelineEntry;
+  active?: boolean;
+}) {
   const { lang } = useLang();
   const dateLabel = useDateLabel(entry);
   const description = tr(entry.description_ko, entry.description_en, lang);
   const location = tr(entry.location_ko, entry.location_en, lang);
 
   return (
-    <li className="relative">
+    <li className="relative" data-spy-id={entry.id}>
       <span
-        className="absolute -left-[1.4375rem] top-5 size-2.5 rounded-full bg-accent ring-4 ring-bg sm:-left-[1.9375rem]"
+        className="timeline-dot"
+        data-active={active}
         aria-hidden="true"
       />
       <article className="card p-4 sm:p-5">
