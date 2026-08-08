@@ -100,18 +100,6 @@ export default function AdminProfilePage() {
         </p>
       </div>
 
-      {/* Live preview: the same component the public page renders, so what is
-          shown here cannot drift from what visitors get. Kept above the form
-          because the card is horizontally wide and wraps awkwardly in a sidebar. */}
-      <section>
-        <p className="eyebrow mb-2">미리보기</p>
-        <div className="rounded-[var(--radius-card)] bg-bg-subtle p-3">
-          <ProfileCard
-            profile={{ ...draft, id: 1, section_order: [...RESUME_SECTIONS] }}
-          />
-        </div>
-      </section>
-
       <div className="flex flex-col gap-5">
         <section className="card flex flex-col gap-4 p-4 sm:p-5">
           <ImageUploader
@@ -239,13 +227,29 @@ export default function AdminProfilePage() {
           />
         </section>
 
-        <SaveBar
-          status={status}
-          error={error}
-          dirty={dirty}
-          onSave={() => void save()}
-        />
       </div>
+
+      {/* Live preview: the same component the public page renders, so what is
+          shown here cannot drift from what visitors get. It sits below the
+          form, full width — the card lays itself out in two columns on a wide
+          viewport, so a narrow sidebar would squeeze the text into a vertical
+          ribbon. The save bar stays last so it keeps sticking to the bottom
+          while this is scrolled past. */}
+      <section>
+        <p className="eyebrow mb-2">미리보기</p>
+        <div className="rounded-[var(--radius-card)] bg-bg-subtle p-3">
+          <ProfileCard
+            profile={{ ...draft, id: 1, section_order: [...RESUME_SECTIONS] }}
+          />
+        </div>
+      </section>
+
+      <SaveBar
+        status={status}
+        error={error}
+        dirty={dirty}
+        onSave={() => void save()}
+      />
     </div>
   );
 }
