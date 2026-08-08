@@ -97,13 +97,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         {/* Every page revalidates against Supabase right after mount, so warm
-            the connection while the document is still parsing. */}
+            the connection while the document is still parsing.
+
+            Two preconnects to the same origin on purpose: the REST calls are
+            CORS requests and the profile <img> is not, and a browser keeps
+            those on separate connections — a crossorigin-only hint leaves the
+            image paying for the handshake itself. */}
         {SUPABASE_URL && (
           <>
+            <link rel="preconnect" href={SUPABASE_URL} />
             <link rel="preconnect" href={SUPABASE_URL} crossOrigin="" />
             <link rel="dns-prefetch" href={SUPABASE_URL} />
           </>
         )}
+        {/* Stack tags pull ~20 devicon SVGs from this CDN. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       <body className="flex min-h-full flex-col">

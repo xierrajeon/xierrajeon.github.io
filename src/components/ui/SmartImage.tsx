@@ -38,7 +38,12 @@ export function SmartImage({
       className={className}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "auto"}
-      decoding={priority ? "sync" : "async"}
+      // Always async. `sync` forces the decode onto the main thread, so a
+      // priority image cannot paint until hydration stops hogging it — which
+      // pushed the profile photo's LCP out by seconds even though its bytes
+      // had arrived early. Async lets the browser decode off-thread and paint
+      // as soon as the pixels are ready.
+      decoding="async"
     />
   );
 }
