@@ -56,6 +56,7 @@ export const dict = {
     "profile.status": "새로운 기회를 찾는 중",
     "profile.contactMe": "Contact",
     "profile.downloadResume": "이력서 다운로드",
+    "profile.email": "Email",
     "profile.phone": "Phone",
     "profile.website": "Website",
     "profile.likes": "명이 이 페이지를 좋아합니다",
@@ -92,7 +93,8 @@ export const dict = {
     "notFound.home": "이력서로 이동",
 
     "cta.title": "함께 일하고 싶으신가요?",
-    "cta.body": "프로젝트 문의나 채용 관련 연락은 아래 이메일로 보내주시면 빠르게 답변 드리겠습니다.",
+    "cta.body":
+      "프로젝트 문의나 채용 관련 연락은 아래 이메일로 보내주시면 빠르게 답변 드리겠습니다.",
     "cta.button": "이메일 보내기",
     "footer.rights": "All rights reserved.",
 
@@ -139,6 +141,7 @@ export const dict = {
     "profile.status": "OPEN TO WORK",
     "profile.contactMe": "Contact",
     "profile.downloadResume": "Download Resume",
+    "profile.email": "Email",
     "profile.phone": "Phone",
     "profile.website": "Website",
     "profile.likes": "people like this page",
@@ -203,7 +206,9 @@ export function translate(lang: Lang, key: DictKey): string {
  * behind UTC.
  * ------------------------------------------------------------------------- */
 
-function parseIsoDate(value: string): { y: number; m: number; d: number } | null {
+function parseIsoDate(
+  value: string,
+): { y: number; m: number; d: number } | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   if (!match) return null;
   return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
@@ -227,8 +232,18 @@ export function formatDate(
     return `${y}.${mm}.${dd}`;
   }
   const monthName = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ][m - 1];
   if (precision === "year") return `${y}`;
   if (precision === "month") return `${monthName} ${y}`;
@@ -286,7 +301,8 @@ export function formatDuration(
     if (years) return `${years}년`;
     return `${rest}개월`;
   }
-  if (years && rest) return `${years} yr${years > 1 ? "s" : ""} ${rest} mo${rest > 1 ? "s" : ""}`;
+  if (years && rest)
+    return `${years} yr${years > 1 ? "s" : ""} ${rest} mo${rest > 1 ? "s" : ""}`;
   if (years) return `${years} yr${years > 1 ? "s" : ""}`;
   return `${rest} mo${rest > 1 ? "s" : ""}`;
 }

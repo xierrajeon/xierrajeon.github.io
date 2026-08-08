@@ -1,6 +1,14 @@
 "use client";
 
-import { Download, Globe, Heart, Mail, Phone, Sparkles, User } from "lucide-react";
+import {
+  Download,
+  Globe,
+  Heart,
+  Mail,
+  Phone,
+  Sparkles,
+  User,
+} from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import { useLang } from "@/components/providers/AppProviders";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/BrandIcons";
@@ -40,8 +48,7 @@ export function ProfileCard({
 
   const displayName =
     lang === "ko" && nameKo && nameEn ? nameKo : tr(nameKo, nameEn, lang);
-  const secondaryName =
-    lang === "ko" && nameKo && nameEn ? nameEn : "";
+  const secondaryName = lang === "ko" && nameKo && nameEn ? nameEn : "";
 
   const email = profile.email?.trim() || null;
   const phone = profile.phone?.trim() || null;
@@ -118,13 +125,21 @@ export function ProfileCard({
             <Markdown className="rich-text mt-4 text-left">{bio}</Markdown>
           )}
 
-          {(contactSlots.length > 0 || phone) && (
+          {(contactSlots.length > 0 || phone || email) && (
             <>
               <hr className="divider my-6" />
               <ul
                 className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
                 aria-label={translate(lang, "resume.contact")}
               >
+                {email && (
+                  <ContactCard
+                    href={`mailto:${email}`}
+                    label={translate(lang, "profile.email")}
+                    value={email}
+                    Icon={Mail}
+                  />
+                )}
                 {phone && telHref && (
                   <ContactCard
                     href={telHref}
@@ -217,7 +232,12 @@ function PhotoFrame({
       {/* Two small sparkles at fixed anchor points. */}
       <Sparkles
         className="profile-decor-sparkle"
-        style={{ top: "0.5rem", right: "0.25rem", width: "1.5rem", height: "1.5rem" }}
+        style={{
+          top: "0.5rem",
+          right: "0.25rem",
+          width: "1.5rem",
+          height: "1.5rem",
+        }}
         aria-hidden="true"
       />
       <Sparkles
@@ -287,9 +307,7 @@ function ContactCard({
       <a
         href={href}
         className="contact-card"
-        {...(external
-          ? { target: "_blank", rel: "noopener noreferrer" }
-          : {})}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       >
         <span className="contact-card-icon" aria-hidden="true">
           <Icon className="size-5" />
@@ -303,10 +321,7 @@ function ContactCard({
 
 /* -------------------------------------------------------------------------- */
 
-function buildContactSlots(
-  profile: Profile,
-  lang: "ko" | "en",
-): ContactSlot[] {
+function buildContactSlots(profile: Profile, lang: "ko" | "en"): ContactSlot[] {
   const slots: ContactSlot[] = [];
 
   const github = safeExternalUrl(profile.github_url);
