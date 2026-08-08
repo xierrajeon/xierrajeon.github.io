@@ -1,3 +1,4 @@
+import { localMedia } from "./media";
 import { normalizeSectionOrder, normalizeTimelineEntries } from "./normalize";
 import { getSupabaseRead } from "./supabase";
 import {
@@ -83,7 +84,15 @@ export async function getProfile(): Promise<Profile> {
     // A row exists but is still blank right after running schema.sql.
     if (!data.name_ko?.trim() && !data.name_en?.trim()) return seedProfile;
     const row = data as Profile;
-    return { ...row, section_order: normalizeSectionOrder(row.section_order) };
+    return {
+      ...row,
+      // Both callers pass through here — the build and the client-side
+      // revalidation — so the photo never flips back to the Supabase origin
+      // after hydration.
+      photo_url: localMedia(row.photo_url),
+      og_image_url: localMedia(row.og_image_url),
+      section_order: normalizeSectionOrder(row.section_order),
+    };
   } catch (error) {
     warn("getProfile", error);
     return seedProfile;

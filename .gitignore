@@ -42,6 +42,11 @@ yarn-error.log*
 # lighthouse reports
 /.lighthouse/
 
+# Images pulled out of Supabase Storage by scripts/mirror-media.mjs. Build
+# artifacts — the manifest itself stays tracked (as `{}`) so typecheck and lint
+# have something to resolve before the script has ever run.
+/public/media/
+
 # vercel
 .vercel
 

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prebuild": "node scripts/clear-fetch-cache.mjs"
+    "prebuild": "node scripts/clear-fetch-cache.mjs && node scripts/mirror-media.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
