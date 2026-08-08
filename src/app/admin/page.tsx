@@ -59,8 +59,7 @@ export default function AdminProfilePage() {
       .then(({ data }) => {
         // Strip section_order — the settings tab owns it and this form must not
         // round-trip its value.
-        const { section_order: _, ...rest } =
-          (data ?? {}) as Partial<Profile>;
+        const { section_order: _, ...rest } = (data ?? {}) as Partial<Profile>;
         setDraft({ ...EMPTY, ...(rest as Partial<Draft>) });
       });
   }, []);
@@ -93,15 +92,27 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-8">
-      <div className="flex flex-col gap-5">
-        <div>
-          <h1 className="text-xl font-bold">프로필</h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            두 탭 상단에 공통으로 보이는 영역입니다.
-          </p>
-        </div>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-xl font-bold">프로필</h1>
+        <p className="mt-1 text-sm text-fg-muted">
+          두 탭 상단에 공통으로 보이는 영역입니다.
+        </p>
+      </div>
 
+      {/* Live preview: the same component the public page renders, so what is
+          shown here cannot drift from what visitors get. Kept above the form
+          because the card is horizontally wide and wraps awkwardly in a sidebar. */}
+      <section>
+        <p className="eyebrow mb-2">미리보기</p>
+        <div className="rounded-[var(--radius-card)] bg-bg-subtle p-3">
+          <ProfileCard
+            profile={{ ...draft, id: 1, section_order: [...RESUME_SECTIONS] }}
+          />
+        </div>
+      </section>
+
+      <div className="flex flex-col gap-5">
         <section className="card flex flex-col gap-4 p-4 sm:p-5">
           <ImageUploader
             label="프로필 사진"
@@ -235,15 +246,6 @@ export default function AdminProfilePage() {
           onSave={() => void save()}
         />
       </div>
-
-      {/* Live preview: the same component the public page renders, so what is
-          shown here cannot drift from what visitors get. */}
-      <aside className="lg:sticky lg:top-28">
-        <p className="eyebrow mb-2">미리보기</p>
-        <div className="rounded-[var(--radius-card)] bg-bg-subtle p-3">
-          <ProfileCard profile={{ ...draft, id: 1, section_order: [...RESUME_SECTIONS] }} />
-        </div>
-      </aside>
     </div>
   );
 }
