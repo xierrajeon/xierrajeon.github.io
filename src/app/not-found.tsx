@@ -21,7 +21,7 @@ export default async function NotFound() {
     <>
       <SiteHeader profile={profile} />
       <main id="main" className="flex-1 pt-6 sm:pt-8">
-        <ProjectFallback />
+        <ProjectFallback siteName={profile.name_ko || profile.name_en} />
       </main>
       <SiteFooter profile={profile} year={new Date().getFullYear()} />
     </>

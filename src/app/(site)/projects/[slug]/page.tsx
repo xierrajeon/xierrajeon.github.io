@@ -70,7 +70,8 @@ export default async function ProjectPage({
 
   // Renders the same client-side lookup as 404.html, so if this slug gains a
   // project between builds the page resolves it instead of dead-ending.
-  if (!project) return <ProjectFallback />;
+  if (!project)
+    return <ProjectFallback siteName={profile.name_ko || profile.name_en} />;
 
   return (
     <>

@@ -6,7 +6,7 @@ import { useLang } from "@/components/providers/AppProviders";
 import { ProjectDetailView } from "./ProjectDetailView";
 import { isSupabaseConfigured } from "@/lib/env";
 import { routes } from "@/lib/site";
-import type { ProjectWithBlocks } from "@/lib/types";
+import type { Lang, ProjectWithBlocks } from "@/lib/types";
 
 /**
  * Rescues project URLs that have no pre-rendered file yet.
@@ -21,13 +21,25 @@ function slugFromPath(pathname: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function projectTitle(project: ProjectWithBlocks, lang: Lang): string {
+  return lang === "en"
+    ? project.title_en || project.title_ko
+    : project.title_ko || project.title_en;
+}
+
 type State =
   | { status: "checking" }
   | { status: "found"; project: ProjectWithBlocks }
   | { status: "missing" };
 
-export function ProjectFallback() {
-  const { t } = useLang();
+/**
+ * `siteName` mirrors the `%s | <name>` title template from the root layout.
+ * When GitHub Pages serves this component through 404.html the document title
+ * is baked as "404 | <name>", so once we resolve the real project we rewrite
+ * <title> to match what a pre-rendered page would have shown.
+ */
+export function ProjectFallback({ siteName }: { siteName?: string } = {}) {
+  const { lang, t } = useLang();
   const [state, setState] = useState<State>({ status: "checking" });
 
   useEffect(() => {
@@ -55,6 +67,18 @@ export function ProjectFallback() {
       cancelled = true;
     };
   }, []);
+
+  // Correct the tab title once the slug resolves. 404.html ships with
+  // "404 | <name>" baked in; leaving it there mislabels a page that is, to the
+  // visitor, a perfectly normal project.
+  useEffect(() => {
+    const suffix = siteName ? ` | ${siteName}` : "";
+    if (state.status === "found") {
+      document.title = `${projectTitle(state.project, lang)}${suffix}`;
+    } else if (state.status === "missing") {
+      document.title = `${t("notFound.title")}${suffix}`;
+    }
+  }, [state, lang, siteName, t]);
 
   if (state.status === "checking") {
     return (
