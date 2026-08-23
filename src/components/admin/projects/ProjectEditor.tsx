@@ -49,6 +49,7 @@ export function ProjectEditor() {
   const [blocks, setBlocks] = useState<ProjectBlock[]>([]);
   const [deletedBlocks, setDeletedBlocks] = useState<string[]>([]);
   const [openBlockId, setOpenBlockId] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const { status, error, run, reset } = useSaver();
@@ -110,6 +111,16 @@ export function ProjectEditor() {
     if (target < 0 || target >= blocks.length) return;
     const next = [...blocks];
     [next[index], next[target]] = [next[target], next[index]];
+    mutateBlocks(next);
+  }
+
+  /** Pulls the dragged block out and re-inserts it at the hovered position. */
+  function reorderBlock(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    if (from >= blocks.length || to >= blocks.length) return;
+    const next = [...blocks];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
     mutateBlocks(next);
   }
 
@@ -376,8 +387,8 @@ export function ProjectEditor() {
           <section className="card flex flex-col gap-4 p-4 sm:p-5">
             <h2 className="text-sm font-bold">상세 페이지 내용</h2>
             <p className="-mt-2 text-2xs text-fg-subtle">
-              위에서 아래 순서로 표시됩니다. &ldquo;제목&rdquo; 블록이 우측 목차를
-              만듭니다.
+              위에서 아래 순서로 표시됩니다. 손잡이(⋮⋮)를 끌어 순서를 바꿀 수
+              있습니다. &ldquo;제목&rdquo; 블록이 우측 목차를 만듭니다.
             </p>
 
             {blocks.length > 0 && (
@@ -389,6 +400,14 @@ export function ProjectEditor() {
                     index={index}
                     count={blocks.length}
                     startOpen={openBlockId === block.id}
+                    dragging={dragIndex === index}
+                    onDragStart={() => setDragIndex(index)}
+                    onDragEnter={() => {
+                      if (dragIndex === null || dragIndex === index) return;
+                      reorderBlock(dragIndex, index);
+                      setDragIndex(index);
+                    }}
+                    onDragEnd={() => setDragIndex(null)}
                     onChange={(next) =>
                       mutateBlocks(
                         blocks.map((row) => (row.id === block.id ? next : row)),

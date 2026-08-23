@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Code2,
+  GripVertical,
   Heading2,
   Image as ImageIcon,
   Images,
@@ -684,19 +685,33 @@ export function BlockCard({
   index,
   count,
   startOpen = false,
+  dragging = false,
   onChange,
   onMove,
   onRemove,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
 }: {
   block: ProjectBlock;
   index: number;
   count: number;
   startOpen?: boolean;
+  /** True while this block is the one being dragged. */
+  dragging?: boolean;
   onChange: (next: ProjectBlock) => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
+  onDragStart: () => void;
+  /** Pointer entered this row while a drag is in progress. */
+  onDragEnter: () => void;
+  onDragEnd: () => void;
 }) {
   const [open, setOpen] = useState(startOpen);
+  // Native drag-and-drop can only start when the element is `draggable`, but a
+  // permanently-draggable card would swallow text selection in its fields. So
+  // the card turns draggable only while the grip handle is held.
+  const [grabbed, setGrabbed] = useState(false);
   const spec = specFor(block.type);
   const Icon = spec.icon;
 
@@ -707,27 +722,58 @@ export function BlockCard({
     } as ProjectBlock);
 
   return (
-    <li className="card overflow-hidden">
+    <li
+      className={`card overflow-hidden transition-shadow ${
+        dragging ? "opacity-60 ring-2 ring-accent" : ""
+      }`}
+      draggable={grabbed}
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        // Firefox refuses to start a drag unless some data is set.
+        event.dataTransfer.setData("text/plain", block.id);
+        onDragStart();
+      }}
+      onDragEnter={onDragEnter}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => event.preventDefault()}
+      onDragEnd={() => {
+        setGrabbed(false);
+        onDragEnd();
+      }}
+    >
       <div className="flex items-center gap-2 p-2.5">
-        <div className="flex flex-col">
-          <button
-            type="button"
-            onClick={() => onMove(-1)}
-            disabled={index === 0}
-            className="btn btn-ghost p-0.5 disabled:opacity-25"
-            aria-label="위로 이동"
+        <div className="flex items-center gap-0.5">
+          <span
+            role="button"
+            tabIndex={-1}
+            aria-label="드래그하여 순서 변경"
+            title="드래그하여 순서 변경"
+            onPointerDown={() => setGrabbed(true)}
+            onPointerUp={() => setGrabbed(false)}
+            className="btn btn-ghost btn-icon btn-sm cursor-grab touch-none text-fg-subtle active:cursor-grabbing"
           >
-            <ChevronUp className="size-3.5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onMove(1)}
-            disabled={index === count - 1}
-            className="btn btn-ghost p-0.5 disabled:opacity-25"
-            aria-label="아래로 이동"
-          >
-            <ChevronDown className="size-3.5" aria-hidden="true" />
-          </button>
+            <GripVertical className="size-4" aria-hidden="true" />
+          </span>
+          <div className="flex flex-col">
+            <button
+              type="button"
+              onClick={() => onMove(-1)}
+              disabled={index === 0}
+              className="btn btn-ghost p-0.5 disabled:opacity-25"
+              aria-label="위로 이동"
+            >
+              <ChevronUp className="size-3.5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onMove(1)}
+              disabled={index === count - 1}
+              className="btn btn-ghost p-0.5 disabled:opacity-25"
+              aria-label="아래로 이동"
+            >
+              <ChevronDown className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <Icon className="size-4 shrink-0 text-accent" aria-hidden="true" />
