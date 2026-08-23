@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, ExternalLink } from "lucide-react";
 import { useLang } from "@/components/providers/AppProviders";
 import { Markdown } from "@/components/ui/Markdown";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { HighlightList } from "@/components/ui/TagList";
 import {
   formatDate,
@@ -362,6 +363,21 @@ export function AwardItem({ entry }: { entry: TimelineEntry }) {
         )}
         {description && (
           <Markdown className="rich-text mt-2 text-sm">{description}</Markdown>
+        )}
+        {entry.image_url && (
+          <a
+            href={entry.image_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block overflow-hidden rounded-lg border border-border transition-opacity hover:opacity-90"
+            aria-label={`${title} ${t("resume.certificate")}`}
+          >
+            <SmartImage
+              src={entry.image_url}
+              alt={`${title} ${t("resume.certificate")}`}
+              className="max-h-56 w-full object-contain bg-surface-sunken"
+            />
+          </a>
         )}
         <HighlightList items={entry.tags} className="mt-2.5" />
       </article>

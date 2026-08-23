@@ -64,6 +64,7 @@ function entry(
     linked_projects: [],
     credential_id: null,
     score: null,
+    image_url: null,
     majors: [],
     gpa: null,
     gpa_scale: null,

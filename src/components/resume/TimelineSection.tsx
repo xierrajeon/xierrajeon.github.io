@@ -30,8 +30,8 @@ export const CATEGORY_CONFIG: Record<TimelineCategory, CategoryConfig> = {
   },
   award: {
     icon: Award,
-    ko: "수상 및 자격증",
-    en: "Awards & Certifications",
+    ko: "수상 · 자격증 · 특허",
+    en: "Awards, Certifications & Patents",
     layout: "grid",
   },
   activity: {

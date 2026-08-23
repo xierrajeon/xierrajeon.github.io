@@ -135,10 +135,15 @@ export interface TimelineEntry {
   /** Career only: projects built there, linked to the portfolio or outward. */
   linked_projects: LinkedProject[];
 
-  /** Award only: the number the issuing body assigned, e.g. a licence number. */
+  /**
+   * Award only: the number the issuing body assigned — a licence number for a
+   * certificate, a registration number for a patent.
+   */
   credential_id: string | null;
   /** Award only: score or grade — TOEIC 950, OPIc IH, HSK 6급. Free text. */
   score: string | null;
+  /** Award only: a scan of the certificate / award / patent. Hidden when null. */
+  image_url: string | null;
 
   /* --- education only ---------------------------------------------------- */
   /** One school, potentially several majors of different kinds. */

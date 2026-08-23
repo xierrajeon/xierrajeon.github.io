@@ -44,7 +44,7 @@ const SECTION_LABELS: Record<ResumeSection, SectionLabel> = {
   education: { icon: GraduationCap, ko: "학력 사항", en: "Education" },
   career: { icon: Briefcase, ko: "경력 사항", en: "Work Experience" },
   activity: { icon: Users, ko: "대외 활동 및 기타", en: "Activities" },
-  award: { icon: Award, ko: "수상 및 자격증", en: "Awards & Certifications" },
+  award: { icon: Award, ko: "수상 · 자격증 · 특허", en: "Awards, Certifications & Patents" },
 };
 
 /**

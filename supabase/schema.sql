@@ -98,7 +98,7 @@ create trigger profile_touch before update on public.profile
   for each row execute function public.touch_updated_at();
 
 -- ----------------------------------------------------------------------------
--- timeline_entries — 학력 / 경력 / 수상이력 / 활동이력
+-- timeline_entries — 학력 / 경력 / 수상·자격증·특허 / 활동이력
 --
 -- Date display rules used by the UI:
 --   end_date set              → "2021.03 – 2023.02"
@@ -168,6 +168,11 @@ alter table public.timeline_entries
 -- text because the shape varies by exam. Hidden when empty.
 alter table public.timeline_entries
   add column if not exists score text;
+
+-- Award/certificate/patent-only: a scan of the certificate, award, or patent
+-- document. Public storage URL, same bucket as project media. Hidden when null.
+alter table public.timeline_entries
+  add column if not exists image_url text;
 
 -- Added as a separate statement so re-running the file on a table that already
 -- has the column still installs the constraint.

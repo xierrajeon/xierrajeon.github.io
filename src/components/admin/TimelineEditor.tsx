@@ -18,6 +18,7 @@ import {
 } from "./ui/Field";
 import { SaveBar } from "./ui/SaveBar";
 import { TagInput } from "./ui/TagInput";
+import { ImageUploader } from "./ui/ImageUploader";
 import { CATEGORY_CONFIG, TimelineSection } from "@/components/resume/TimelineSection";
 import { getSupabaseBrowser } from "@/lib/supabase";
 import { useSaver } from "@/lib/admin/useSaver";
@@ -65,6 +66,7 @@ function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
     linked_projects: [],
     credential_id: null,
     score: null,
+    image_url: null,
     majors: [],
     gpa: null,
     gpa_scale: category === "education" ? 4.5 : null,
@@ -582,7 +584,7 @@ function EntryCard({
           <BilingualField
             label={
               entry.category === "award"
-                ? "수상명 · 자격증명"
+                ? "수상명 · 자격증명 · 특허명"
                 : entry.category === "education"
                   ? "학교명"
                   : entry.category === "career"
@@ -598,7 +600,7 @@ function EntryCard({
           <BilingualField
             label={
               entry.category === "award"
-                ? "주최 기관"
+                ? "발급 · 주최 기관"
                 : entry.category === "education"
                   ? "학위"
                   : entry.category === "career"
@@ -665,13 +667,22 @@ function EntryCard({
                   hint="어학 시험 점수/등급. 비워두면 표시되지 않습니다."
                 />
                 <TextInput
-                  label="자격번호"
+                  label="자격 · 특허번호"
                   placeholder="24201050123A"
                   value={entry.credential_id ?? ""}
                   onChange={(v) => set("credential_id", v || null)}
-                  hint="발급기관이 부여한 번호. 비워두면 표시되지 않습니다."
+                  hint="발급기관이 부여한 자격번호 또는 특허등록번호. 비워두면 표시되지 않습니다."
                 />
               </div>
+
+              <ImageUploader
+                label="증빙 이미지"
+                hint="자격증 · 상장 · 특허증 사진. 카드 안에 함께 표시됩니다."
+                folder="timeline"
+                maxWidth={1200}
+                value={{ url: entry.image_url }}
+                onChange={(next) => set("image_url", next.url)}
+              />
             </>
           ) : (
             <>
