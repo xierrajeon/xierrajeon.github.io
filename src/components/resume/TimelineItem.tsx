@@ -323,63 +323,76 @@ export function AwardItem({ entry }: { entry: TimelineEntry }) {
   return (
     <li>
       <article className="card h-full p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-[0.9375rem] font-bold leading-snug">
-            {safeExternalUrl(entry.url) ? (
-              <a
-                href={safeExternalUrl(entry.url) as string}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-accent"
-              >
-                {title}
-              </a>
-            ) : (
-              title
+        {/* An image, when present, sits in a narrow right column so the card
+            stays compact — the text keeps ~2/3, the thumbnail takes ~1/3 and
+            links out to the full-size scan. Without one the content spans the
+            whole width as before. */}
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-[0.9375rem] font-bold leading-snug">
+                {safeExternalUrl(entry.url) ? (
+                  <a
+                    href={safeExternalUrl(entry.url) as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-accent"
+                  >
+                    {title}
+                  </a>
+                ) : (
+                  title
+                )}
+              </h3>
+              {date && (
+                <p className="date-pill date-pill-accent shrink-0">{date}</p>
+              )}
+            </div>
+            {subtitle && (
+              <p className="mt-1 text-xs text-fg-muted">{subtitle}</p>
             )}
-          </h3>
-          {date && (
-            <p className="date-pill date-pill-accent shrink-0">{date}</p>
+            {entry.score && (
+              <p className="mt-1.5 text-sm">
+                <span className="text-2xs font-semibold text-fg-subtle">
+                  {t("resume.score")}
+                </span>{" "}
+                <strong className="font-bold tabular-nums text-accent">
+                  {entry.score}
+                </strong>
+              </p>
+            )}
+            {entry.credential_id && (
+              <p className="mt-1 text-2xs text-fg-subtle">
+                {t("resume.credentialId")}{" "}
+                <span className="font-mono tabular-nums">
+                  {entry.credential_id}
+                </span>
+              </p>
+            )}
+            {description && (
+              <Markdown className="rich-text mt-2 text-sm">
+                {description}
+              </Markdown>
+            )}
+            <HighlightList items={entry.tags} className="mt-2.5" />
+          </div>
+
+          {entry.image_url && (
+            <a
+              href={entry.image_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-1/3 shrink-0 overflow-hidden rounded-md border border-border transition-opacity hover:opacity-90"
+              aria-label={`${title} ${t("resume.certificate")}`}
+            >
+              <SmartImage
+                src={entry.image_url}
+                alt={`${title} ${t("resume.certificate")}`}
+                className="aspect-[3/4] w-full bg-surface-sunken object-cover object-top"
+              />
+            </a>
           )}
         </div>
-        {subtitle && (
-          <p className="mt-1 text-xs text-fg-muted">{subtitle}</p>
-        )}
-        {entry.score && (
-          <p className="mt-1.5 text-sm">
-            <span className="text-2xs font-semibold text-fg-subtle">
-              {t("resume.score")}
-            </span>{" "}
-            <strong className="font-bold tabular-nums text-accent">
-              {entry.score}
-            </strong>
-          </p>
-        )}
-        {entry.credential_id && (
-          <p className="mt-1 text-2xs text-fg-subtle">
-            {t("resume.credentialId")}{" "}
-            <span className="font-mono tabular-nums">{entry.credential_id}</span>
-          </p>
-        )}
-        {description && (
-          <Markdown className="rich-text mt-2 text-sm">{description}</Markdown>
-        )}
-        {entry.image_url && (
-          <a
-            href={entry.image_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 block overflow-hidden rounded-lg border border-border transition-opacity hover:opacity-90"
-            aria-label={`${title} ${t("resume.certificate")}`}
-          >
-            <SmartImage
-              src={entry.image_url}
-              alt={`${title} ${t("resume.certificate")}`}
-              className="max-h-56 w-full object-contain bg-surface-sunken"
-            />
-          </a>
-        )}
-        <HighlightList items={entry.tags} className="mt-2.5" />
       </article>
     </li>
   );
