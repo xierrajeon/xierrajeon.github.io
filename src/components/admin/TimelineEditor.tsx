@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  CalendarArrowDown,
   ChevronDown,
   ChevronUp,
   EyeOff,
@@ -72,6 +73,22 @@ function blankEntry(category: TimelineCategory, index: number): TimelineEntry {
     gpa_scale: category === "education" ? 4.5 : null,
     enrollment_status: category === "education" ? "graduated" : null,
   };
+}
+
+/**
+ * Newest first. ISO date strings ("2025-11-01") already sort correctly as
+ * plain strings, so no Date parsing is needed. Entries with no start date sink
+ * to the bottom; ties break on "still ongoing" and then the later end date.
+ */
+function compareByDateDesc(a: TimelineEntry, b: TimelineEntry): number {
+  const sa = a.start_date ?? "";
+  const sb = b.start_date ?? "";
+  if (sa !== sb) return sa < sb ? 1 : -1;
+  if (a.is_current !== b.is_current) return a.is_current ? -1 : 1;
+  const ea = a.end_date ?? "";
+  const eb = b.end_date ?? "";
+  if (ea !== eb) return ea < eb ? 1 : -1;
+  return 0;
 }
 
 const PRECISION_OPTIONS: { value: DatePrecision; label: string }[] = [
@@ -865,6 +882,17 @@ export function TimelineEditor() {
     replaceInCategory(next);
   }
 
+  function sortByDate() {
+    replaceInCategory([...visible].sort(compareByDateDesc));
+  }
+
+  // Hides the sort button once the order already matches, so it never looks
+  // like a no-op button that "does nothing".
+  const alreadySorted = useMemo(
+    () => visible.every((row, i) => i === 0 || compareByDateDesc(visible[i - 1], row) <= 0),
+    [visible],
+  );
+
   function remove(entry: TimelineEntry) {
     if (!confirm(`"${entry.title_ko || entry.title_en || "이 항목"}" 을 삭제할까요?`))
       return;
@@ -936,7 +964,8 @@ export function TimelineEditor() {
       <div>
         <h1 className="text-xl font-bold">이력</h1>
         <p className="mt-1 text-sm text-fg-muted">
-          이력서 탭에 타임라인으로 표시됩니다. 위아래 화살표로 순서를 바꿉니다.
+          이력서 탭에 타임라인으로 표시됩니다. 위아래 화살표로 순서를 바꾸거나,
+          &ldquo;날짜순 정렬&rdquo;로 최신순으로 한 번에 맞출 수 있습니다.
         </p>
       </div>
 
@@ -961,6 +990,19 @@ export function TimelineEditor() {
           );
         })}
       </div>
+
+      {visible.length > 1 && !alreadySorted && (
+        <div className="-mt-1 flex justify-end">
+          <button
+            type="button"
+            onClick={sortByDate}
+            className="btn btn-secondary btn-sm gap-1.5"
+          >
+            <CalendarArrowDown className="size-4" aria-hidden="true" />
+            날짜순 정렬 (최신 먼저)
+          </button>
+        </div>
+      )}
 
       <ul className="flex flex-col gap-2.5">
         {visible.map((entry, index) => (
