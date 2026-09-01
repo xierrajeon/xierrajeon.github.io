@@ -106,9 +106,12 @@ export async function getTimelineEntries(allowSeed = true): Promise<TimelineEntr
     const { data, error } = await supabase
       .from("timeline_entries")
       .select("*")
+      // Newest first, automatically. `sort_order` only breaks ties between
+      // entries that share a start date, so the admin never has to hand-sort a
+      // category just because a recent entry was added last.
       .eq("is_published", true)
-      .order("sort_order", { ascending: true })
-      .order("start_date", { ascending: false, nullsFirst: false });
+      .order("start_date", { ascending: false, nullsFirst: false })
+      .order("sort_order", { ascending: true });
     if (error) throw error;
     if (data?.length) return normalizeTimelineEntries(data as TimelineEntry[]);
     return allowSeed ? seedTimeline : [];

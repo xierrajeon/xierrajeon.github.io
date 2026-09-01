@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  CalendarArrowDown,
   ChevronDown,
   ChevronUp,
   EyeOff,
@@ -838,7 +837,11 @@ export function TimelineEditor() {
           .order("sort_order", { ascending: true }),
       ]);
 
-      setRows(normalizeTimelineEntries((entries ?? []) as TimelineEntry[]));
+      setRows(
+        normalizeTimelineEntries((entries ?? []) as TimelineEntry[]).sort(
+          compareByDateDesc,
+        ),
+      );
       setProjectOptions(
         (projects ?? []).map((p) => ({
           slug: p.slug as string,
@@ -881,17 +884,6 @@ export function TimelineEditor() {
     [next[index], next[target]] = [next[target], next[index]];
     replaceInCategory(next);
   }
-
-  function sortByDate() {
-    replaceInCategory([...visible].sort(compareByDateDesc));
-  }
-
-  // Hides the sort button once the order already matches, so it never looks
-  // like a no-op button that "does nothing".
-  const alreadySorted = useMemo(
-    () => visible.every((row, i) => i === 0 || compareByDateDesc(visible[i - 1], row) <= 0),
-    [visible],
-  );
 
   function remove(entry: TimelineEntry) {
     if (!confirm(`"${entry.title_ko || entry.title_en || "이 항목"}" 을 삭제할까요?`))
@@ -943,7 +935,11 @@ export function TimelineEditor() {
         .from("timeline_entries")
         .select("*")
         .order("sort_order", { ascending: true });
-      setRows(normalizeTimelineEntries((data ?? []) as TimelineEntry[]));
+      setRows(
+        normalizeTimelineEntries((data ?? []) as TimelineEntry[]).sort(
+          compareByDateDesc,
+        ),
+      );
       setDeleted([]);
     });
 
@@ -964,8 +960,8 @@ export function TimelineEditor() {
       <div>
         <h1 className="text-xl font-bold">이력</h1>
         <p className="mt-1 text-sm text-fg-muted">
-          이력서 탭에 타임라인으로 표시됩니다. 위아래 화살표로 순서를 바꾸거나,
-          &ldquo;날짜순 정렬&rdquo;로 최신순으로 한 번에 맞출 수 있습니다.
+          이력서 탭에 타임라인으로 표시됩니다. 날짜(최신순)로 자동 정렬되며,
+          같은 날짜인 항목은 위아래 화살표로 순서를 조정할 수 있습니다.
         </p>
       </div>
 
@@ -991,19 +987,6 @@ export function TimelineEditor() {
         })}
       </div>
 
-      {visible.length > 1 && !alreadySorted && (
-        <div className="-mt-1 flex justify-end">
-          <button
-            type="button"
-            onClick={sortByDate}
-            className="btn btn-secondary btn-sm gap-1.5"
-          >
-            <CalendarArrowDown className="size-4" aria-hidden="true" />
-            날짜순 정렬 (최신 먼저)
-          </button>
-        </div>
-      )}
-
       <ul className="flex flex-col gap-2.5">
         {visible.map((entry, index) => (
           <EntryCard
@@ -1014,8 +997,13 @@ export function TimelineEditor() {
             allTags={allTags}
             projectOptions={projectOptions}
             onChange={(next) =>
+              // Re-sort on every edit so a changed date snaps into place
+              // automatically. The sort is stable, so editing a non-date field
+              // (or two entries sharing a date) never disturbs the order.
               replaceInCategory(
-                visible.map((row) => (row.id === entry.id ? next : row)),
+                visible
+                  .map((row) => (row.id === entry.id ? next : row))
+                  .sort(compareByDateDesc),
               )
             }
             onMove={(direction) => move(index, direction)}
