@@ -306,7 +306,9 @@ export function TimelineItem({
 
         <HighlightList items={entry.tags} className="mt-3" />
 
-        {entry.category === "career" && <LinkedProjects entry={entry} />}
+        {(entry.category === "career" || entry.category === "activity") && (
+          <LinkedProjects entry={entry} />
+        )}
       </article>
     </li>
   );

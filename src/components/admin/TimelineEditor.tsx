@@ -771,7 +771,7 @@ function EntryCard({
             suggestions={allTags}
           />
 
-          {entry.category === "career" && (
+          {(entry.category === "career" || entry.category === "activity") && (
             <LinkedProjectsEditor
               items={entry.linked_projects ?? []}
               options={projectOptions}
